@@ -1,4 +1,3 @@
-import { traceProcessWarnings } from "node:process"
 import {io} from "socket.io-client"
 
 export const initSocket = async() => {

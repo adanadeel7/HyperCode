@@ -1,12 +1,13 @@
 import React, { use, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import {v4 as uuid} from "uuid"
+import {useNavigate} from "react-router-dom"
 
 function Room() {
   const glowRef = useRef(null);
   const [room, setRoom] = useState('')
   const [userName, SetuserName] = useState('')
-
+  const navigate = useNavigate()
   useEffect(() => { 
     if(!glowRef.current) return; 
 
@@ -28,6 +29,18 @@ function Room() {
 
 
   }
+
+  const handleJoinSession = () => {
+    if (!room.trim() || !userName.trim) {
+      alert("Please supply both a valid Room ID and Developer Alias.")
+    return; 
+  }
+    navigate(`/editor/${room}`, { 
+      state: {userName, room}
+    })
+  }
+
+
 
   return (
     <>
@@ -100,7 +113,7 @@ function Room() {
                 type="button"
                 value={"Initialize Connection"}
                 className="bg-[#00dce5] px-21 py-3 uppercase rounded font-label text-[12px] font-extralight cursor-pointer"
-                
+                onClick={handleJoinSession}
               />
             </div>
 
