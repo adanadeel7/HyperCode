@@ -1,4 +1,5 @@
 import {io} from "socket.io-client"
+import dotenv from "dotenv"
 
 export const initSocket = async() => {
     const options = { 
@@ -9,5 +10,6 @@ export const initSocket = async() => {
 
     }
 
-    return io(process.env.REACT_APP_BACKEND_URL,options)
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+    return io(backendUrl,options)
 }
