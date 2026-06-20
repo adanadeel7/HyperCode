@@ -39,7 +39,4 @@ Follow these steps to configure your local development environment for HyperCode
 * Node.js installed on your machine (v16.x or higher recommended)
 * npm or yarn package managers
 
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/your-username/HyperCode.git](https://github.com/your-username/HyperCode.git)
-cd HyperCode
+
