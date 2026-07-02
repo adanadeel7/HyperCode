@@ -16,6 +16,21 @@ const roomSchema = new mongoose.Schema({
     language: { 
         type : String, 
         default : "javascript"
+    }, 
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    }, 
+    members: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+
+    
+    name: {
+        type: String,
+        default: "Untitled Project"
     }
 
 }, { 

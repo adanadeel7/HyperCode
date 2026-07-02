@@ -1,6 +1,7 @@
 import express from "express" 
 import compilerRouter from "./routes/compiler.routes.js"
 import cors from "cors"; 
+import authRouter from "./routes/auth.routes.js";
 
 const app = express()
 
@@ -9,6 +10,8 @@ app.use(cors({
     methods: ["GET", "POST"]
 }));
 
+
 app.use(express.json());
+app.use("/api/auth", authRouter);
 app.use("/api", compilerRouter);
 export default app;

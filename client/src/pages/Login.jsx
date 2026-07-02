@@ -2,11 +2,42 @@ import React, { use, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import {v4 as uuid} from "uuid"
 import {useNavigate} from "react-router-dom"
+import toast from 'react-hot-toast';
 
-function Room() {
+function Login() {
+
+const [formData, setFormData] = useState({
+    email : '', 
+    password: '',
+})
+
+const {email , password} = formData;
+
+
+    
+
+
+
+const onChange = (e) => {
+    setFormData((prevState) => ({
+        ...prevState,
+        [e.target.name] : e.target.value,
+    }))
+}
+
+
+const onSubmit = (e) => { 
+    e.preventDefault()
+
+    if (!email || !password) { 
+        toast.error('Please Enter All fields')
+        return;
+    }
+     toast.success('Logged in Successfully');
+    navigate('/room');
+}
+
   const glowRef = useRef(null);
-  const [room, setRoom] = useState('')
-  const [userName, SetuserName] = useState('')
   const navigate = useNavigate()
   useEffect(() => { 
     if(!glowRef.current) return; 
@@ -23,22 +54,8 @@ function Room() {
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, []); 
 
-  const createNewRoom = (e) => { 
-    const id = uuid()
-    setRoom(id)
-
-
-  }
-
-  const handleJoinSession = () => {
-    if (!room.trim() || !userName.trim) {
-      alert("Please supply both a valid Room ID and Developer Alias.")
-    return; 
-  }
-    navigate(`/editor/${room}`, { 
-      state: {userName, room}
-    })
-  }
+ 
+  
 
 
 
@@ -74,21 +91,22 @@ function Room() {
             
             <div className="flex flex-col items-start w-full max-w-xs pt-17">
               <h1 className="font-headline text-[#dae2fb] text-[20px]">
-                Join Session
+                Login
               </h1>
             </div>
 
             <div className="flex flex-col items-center w-full pt-8">
               <div className="flex flex-col items-start w-full max-w-xs">
                 <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2">
-                  ROOM ID
+                  EMAIL
                 </h3>
                 <input
-                  placeholder="e.g. hc-alpha-992"
-                  type="text"
+                  placeholder="developer@example.com"
+                  type="email"
+                  name="email"
                   className="bg-white text-[15px] text-[#c6c9cf] px-3 py-2 w-full rounded border border-[#3a494a] font-editor focus:outline-none"
-                  onChange={(e) => setRoom(e.target.value)}
-                  value={room}
+                  onChange={onChange}
+                  value={email}
                 />
               </div>
             </div>
@@ -96,14 +114,15 @@ function Room() {
             <div className="flex flex-col items-center w-full pt-8">
               <div className="flex flex-col items-start w-full max-w-xs">
                 <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2">
-                  ALIAS
+                  PASSWORD
                 </h3>
                 <input
-                  placeholder="developer_name"
-                  type="text"
+                  placeholder="••••••••"
+                  type="password"
+                  name="password"
                   className="bg-white px-3 py-2 w-full rounded border border-[#3a494a] font-editor text-[15px] focus:outline-none text-[#c6c9cf]"
-                  onChange={(e) => SetuserName(e.target.value)}
-                  value = {userName}
+                  onChange={onChange}
+                  value = {password}
                 />
               </div>
             </div>
@@ -111,21 +130,21 @@ function Room() {
             <div className="pt-12">
               <input
                 type="button"
-                value={"Initialize Connection"}
+                value={"Login"}
                 className="bg-[#00dce5] px-21 py-3 uppercase rounded font-label text-[12px] font-extralight cursor-pointer"
-                onClick={handleJoinSession}
+                onClick={onSubmit}
               />
             </div>
 
             <div className="flex font-body text-[14px] py-6">
               <h1 className="text-[#b3c4c4] font-bold">
-                Need a new workspace?
+                New User?
               </h1>
               <input
                 type="button"
-                value={"Create Room"}
+                value={"Register"}
                 className="text-[#5eecf4] px-2 cursor-pointer"
-                onClick={createNewRoom}
+                // onClick={}
               />
             </div>
 
@@ -137,4 +156,4 @@ function Room() {
   );
 }
 
-export default Room;
+export default Login;

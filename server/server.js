@@ -65,7 +65,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on("code-change", ({ roomId, code }) => {
-        // Broadcast change instantly to other clients for 60fps local rendering performance
         socket.to(roomId).emit("code-update", code);
 
         if (saveTimeouts[roomId]) {
