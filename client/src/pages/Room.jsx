@@ -26,12 +26,15 @@ function Room() {
   const createNewRoom = (e) => { 
     const id = uuid()
     setRoom(id)
+    navigate(`/editor/${id}`, { 
+      state: {userName, room:id}
+    })
 
 
   }
 
   const handleJoinSession = () => {
-    if (!room.trim() || !userName.trim) {
+    if (!room.trim() || !userName.trim()) {
       alert("Please supply both a valid Room ID and Developer Alias.")
     return; 
   }
