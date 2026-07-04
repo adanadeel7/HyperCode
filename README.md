@@ -28,6 +28,11 @@ HyperCode is a high-performance, real-time collaborative engineering space that 
 * **Socket.io Server** - Event-driven architectural socket orchestration wrapper.
 * **UUID** - Cryptographic generation engine for workspace isolation layers.
 * **Dotenv** - Multi-environment token masking container setups.
+* * **JWT** - For tokens.
+* * **Bcrpty** - For Auth.
+
+
+
 
 ---
 
