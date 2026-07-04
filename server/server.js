@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import app from "./src/app.js";
 import connectDB from "./src/config/db.js"; 
 import { Room } from "./src/models/Room.models.js";
+import router from "./src/routes/auth.routes.js";
 
 dotenv.config();
 const Port = process.env.PORT || 8000;
@@ -22,6 +23,7 @@ const userSocketMap = {};
 
 
 const saveTimeouts = {};
+
 
 function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {
@@ -100,6 +102,13 @@ io.on('connection', (socket) => {
         delete userSocketMap[socket.id];
     });
 });
+
+
+app.get('/', (req,res) => { 
+    res.send("API Working")
+})
+
+app.use('/api/auth', router)
 
 server.listen(Port, () => { 
     console.log(`The Server is Running at Port: ${Port}`);
