@@ -104,11 +104,7 @@ io.on('connection', (socket) => {
 });
 
 
-app.get('/', (req,res) => { 
-    res.send("API Working")
-})
 
-app.use('/api/auth', router)
 
 server.listen(Port, () => { 
     console.log(`The Server is Running at Port: ${Port}`);

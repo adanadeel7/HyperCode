@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes,Route } from 'react-router'
+import { BrowserRouter, Routes,Route } from 'react-router-dom'
 import Room from './pages/Room.jsx'
 import Editor from './pages/Editor.jsx'
 import Login from './pages/Login.jsx'
