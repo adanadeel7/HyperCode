@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
 
+const fileSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    content: {
+        type: String,
+        default: ""
+    },
+    language: {
+        type: String,
+        default: "javascript"
+    }
+});
+
 const roomSchema = new mongoose.Schema({
     roomId: { 
         type: String,
@@ -8,15 +24,16 @@ const roomSchema = new mongoose.Schema({
         trim: true
     }, 
 
-    currentCode: { 
-        type: String, 
-        default: `// Welcome to your persistent HyperCode workspace\nfunction init() {\n  console.log("Ready.");\n}\ninit();`
-    }, 
+    files: {
+        type: [fileSchema],
+        default: []
+    },
+
+    activeFile: {
+        type: String,
+        default: "main.js"
+    },
     
-    language: { 
-        type : String, 
-        default : "javascript"
-    }, 
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

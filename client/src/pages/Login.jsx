@@ -6,12 +6,14 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/authContext.jsx";
 
 function Login() {
+  const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
   });
 
-  const { email, password } = formData;
+  const { name, email, password } = formData;
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -21,6 +23,7 @@ function Login() {
   };
 
   const { setUser } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -57,7 +60,7 @@ function Login() {
     e.preventDefault(); 
 
     try { 
-      const name = email.split("@")[0] || "Developer";
+      const displayName = name.trim() || email.split("@")[0] || "Developer";
       const response = await fetch("http://localhost:8000/api/auth/register", { 
         method : "POST", 
         credentials : "include", 
@@ -65,7 +68,7 @@ function Login() {
           "Content-Type" : "application/json"
         }, 
         body : JSON.stringify({
-          name,
+          name: displayName,
           email,
           password,
         })
@@ -87,7 +90,6 @@ function Login() {
   }
 
   const glowRef = useRef(null);
-  const navigate = useNavigate();
   useEffect(() => {
     if (!glowRef.current) return;
 
@@ -118,7 +120,7 @@ function Login() {
       />
 
       <div
-        className="w-full h-screen bg-[#0b1324] relative overflow-hidden z-0"
+        className="w-full min-h-screen bg-[#0b1324] relative overflow-hidden z-0 flex flex-col justify-center"
         style={{
           backgroundSize: "40px 40px",
           backgroundImage: `
@@ -126,8 +128,8 @@ function Login() {
             linear-gradient(to bottom, rgba(0, 220, 229, 0.04) 1px, transparent 1px)`,
         }}
       >
-        <div className="relative z-20 w-full h-full">
-          <div className="text-center pt-12">
+        <div className="relative z-20 w-full max-w-md mx-auto py-12 px-6">
+          <div className="text-center pb-8">
             <h1 className="font-headline text-[32px] font-bold text-[#cbdfe2]">
               HyperCode
             </h1>
@@ -136,62 +138,82 @@ function Login() {
             </h2>
           </div>
 
-          <div className="flex flex-col items-center w-full">
-            <div className="flex flex-col items-start w-full max-w-xs pt-17">
-              <h1 className="font-headline text-[#dae2fb] text-[20px]">
-                Login
+          <div className="bg-[#171f31]/60 backdrop-blur-md border border-[#3a494a]/50 p-8 rounded-xl shadow-xl">
+            <div className="flex flex-col items-start w-full pb-6">
+              <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
+                {isRegister ? "Register" : "Login"}
               </h1>
             </div>
 
-            <div className="flex flex-col items-center w-full pt-8">
-              <div className="flex flex-col items-start w-full max-w-xs">
-                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2">
+            <form onSubmit={isRegister ? handleRegister : onSubmit} className="space-y-6">
+              {isRegister && (
+                <div className="flex flex-col items-start w-full">
+                  <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                    NAME
+                  </h3>
+                  <input
+                    placeholder="Enter your name"
+                    type="text"
+                    name="name"
+                    className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                    onChange={onChange}
+                    value={name}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col items-start w-full">
+                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
                   EMAIL
                 </h3>
                 <input
                   placeholder="developer@example.com"
                   type="email"
                   name="email"
-                  className="bg-white text-[15px] text-[#c6c9cf] px-3 py-2 w-full rounded border border-[#3a494a] font-editor focus:outline-none"
+                  className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
                   onChange={onChange}
                   value={email}
+                  required
                 />
               </div>
-            </div>
 
-            <div className="flex flex-col items-center w-full pt-8">
-              <div className="flex flex-col items-start w-full max-w-xs">
-                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2">
+              <div className="flex flex-col items-start w-full">
+                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
                   PASSWORD
                 </h3>
                 <input
                   placeholder="••••••••"
                   type="password"
                   name="password"
-                  className="bg-white px-3 py-2 w-full rounded border border-[#3a494a] font-editor text-[15px] focus:outline-none text-[#c6c9cf]"
+                  className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
                   onChange={onChange}
                   value={password}
+                  required
                 />
               </div>
-            </div>
 
-            <div className="pt-12">
-              <input
-                type="button"
-                value={"Login"}
-                className="bg-[#00dce5] px-21 py-3 uppercase rounded font-label text-[12px] font-extralight cursor-pointer"
-                onClick={onSubmit}
-              />
-            </div>
+              <div className="pt-4 text-center">
+                <button
+                  type="submit"
+                  className="bg-[#00dce5] hover:bg-[#63f7ff] text-[#003739] w-full py-3 uppercase rounded font-label text-[12px] font-extrabold tracking-wider transition-all cursor-pointer"
+                >
+                  {isRegister ? "Register" : "Login"}
+                </button>
+              </div>
+            </form>
 
-            <div className="flex font-body text-[14px] py-6">
-              <h1 className="text-[#b3c4c4] font-bold">New User?</h1>
-              <input
+            <div className="flex justify-center font-body text-[14px] pt-6 border-t border-[#3a494a]/30 mt-6">
+              <h1 className="text-[#b3c4c4]">
+                {isRegister ? "Already have an account?" : "New User?"}
+              </h1>
+              <button
                 type="button"
-                value={"Register"}
-                className="text-[#5eecf4] px-2 cursor-pointer"
-                onClick={handleRegister}
-              />
+                className="text-[#5eecf4] px-2 font-bold cursor-pointer hover:underline"
+                onClick={() => setIsRegister(!isRegister)}
+              >
+                {isRegister ? "Login" : "Register"}
+              </button>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext.jsx";
 import { gsap } from "gsap";
-import { Plus, LogOut, ArrowRight, Code, Layout, Calendar } from "lucide-react";
+import { Plus, LogOut, ArrowRight, Code, Layout, Calendar, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 function Dashboard() {
@@ -85,6 +85,27 @@ function Dashboard() {
     navigate(`/editor/${roomIdInput}`, {
       state: { userName: user?.name || "Developer", room: roomIdInput }
     });
+  };
+
+  const handleDeleteRoom = async (e, roomId) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this workspace? This action cannot be undone.")) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/rooms/${roomId}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success("Workspace deleted successfully!");
+          setRecentRooms(prev => prev.filter(r => r.roomId !== roomId));
+        } else {
+          toast.error(data.message || "Failed to delete workspace");
+        }
+      } catch (err) {
+        toast.error("Error connecting to server");
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -227,6 +248,15 @@ function Dashboard() {
                               <Calendar className="w-3 h-3" /> {new Date(room.updatedAt).toLocaleDateString()}
                             </span>
                           </div>
+                          {((room.owner?._id || room.owner) === user?._id) && (
+                            <button
+                              onClick={(e) => handleDeleteRoom(e, room.roomId)}
+                              className="text-[#808e93] hover:text-red-400 p-1.5 rounded transition-all cursor-pointer hover:bg-[#2d3547]/30 z-30"
+                              title="Delete Workspace"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                           <ArrowRight className="w-4 h-4 text-[#808e93] group-hover:text-[#00dce5] group-hover:translate-x-1 transition-all" />
                         </div>
                       </div>

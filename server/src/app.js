@@ -10,7 +10,7 @@ const app = express()
 // 1. Configure Global Middlewares First
 app.use(cors({
     origin: "http://localhost:5173", 
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true, 
 }));
 app.use(express.json());

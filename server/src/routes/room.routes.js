@@ -37,4 +37,26 @@ router.post("/rooms", protect, async (req, res) => {
     }
 });
 
+// DELETE /api/rooms/:roomId: Delete a workspace (requires ownership)
+router.delete("/rooms/:roomId", protect, async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const room = await Room.findOne({ roomId });
+        
+        if (!room) {
+            return res.status(404).json({ success: false, message: "Workspace not found" });
+        }
+        
+        // Authorization check: only owner can delete the workspace
+        if (room.owner && room.owner.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized to delete this workspace" });
+        }
+        
+        await Room.deleteOne({ roomId });
+        res.json({ success: true, message: "Workspace deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 export default router;
