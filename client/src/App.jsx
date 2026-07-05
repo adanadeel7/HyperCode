@@ -4,12 +4,17 @@ import Room from './pages/Room.jsx'
 import Editor from './pages/Editor.jsx'
 import Login from './pages/Login.jsx'
 import ProtectedRoute from './pages/ProtectedRoute.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+
+import { Toaster } from 'react-hot-toast'
+import { useAuth } from './context/authContext.jsx'
 
 function App() {
-  
+  const { user } = useAuth()
 
   return (
     <>
+     <Toaster position="top-center" />
      <BrowserRouter>
         <Routes>
               <Route path='/' element={<Login/>}/>
@@ -17,7 +22,7 @@ function App() {
               <Route path='/room' 
               element={
               <ProtectedRoute user={user}>
-                <Room/>
+                <Dashboard/>
               </ProtectedRoute>
               }
               />

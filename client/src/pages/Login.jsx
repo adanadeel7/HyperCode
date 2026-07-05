@@ -1,8 +1,9 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { v4 as uuid } from "uuid";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/authContext.jsx";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -19,7 +20,9 @@ function Login() {
     }));
   };
 
-  const onSubmit = (e) => {
+  const { setUser } = useAuth();
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     try { 
       const response = await fetch("http://localhost:8000/api/auth/login",{
@@ -42,6 +45,7 @@ function Login() {
       }
 
       toast.success("Logged in Successfully")
+      setUser(data.user);
       navigate("/room");
     } catch (error) { 
       toast.error(error.message);
@@ -53,6 +57,7 @@ function Login() {
     e.preventDefault(); 
 
     try { 
+      const name = email.split("@")[0] || "Developer";
       const response = await fetch("http://localhost:8000/api/auth/register", { 
         method : "POST", 
         credentials : "include", 
@@ -64,16 +69,17 @@ function Login() {
           email,
           password,
         })
-})
-    const data = await response.json(); 
+      })
+      const data = await response.json(); 
 
-    if (!response.ok) { 
-      toast.error(data.message || "Registration failed")
-      return;
-    }
+      if (!response.ok) { 
+        toast.error(data.message || "Registration failed")
+        return;
+      }
 
-    toast.success("Account Created")
-    navigate("room")
+      toast.success("Account Created")
+      setUser(data.user);
+      navigate("/room")
     } catch (error) {
       toast.error(error.message)
     }

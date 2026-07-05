@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Copy, Moon, FolderGit2, Play, Terminal as TermIcon, FileCode, Users } from "lucide-react";
 import { gsap } from "gsap";
 import { useLocation, useParams } from "react-router-dom";
-import { initSocket } from "../../../server/src/socket.js";
+import { initSocket } from "../socket.js";
 
 function Editor() {
   const containerRef = useRef(null);
