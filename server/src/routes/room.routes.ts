@@ -1,61 +1,81 @@
 import { Router } from "express";
 import { Room } from "../models/Room.models.js";
 import { protect } from "../middleware/auth.middleware.js";
+import {Request, Response} from 'express'
 
 const router = Router();
 
+
 // GET /api/rooms: Fetch all rooms owned by or shared with the user
-router.get("/rooms", protect, async (req, res) => {
+router.get("/rooms", protect, async (req : Request, res : Response) => {
+    const userid = req.user?._id
+    if (!userid) {
+        throw Error('No userid ')
+    }
+
     try {
         const rooms = await Room.find({
             $or: [
-                { owner: req.user._id },
-                { members: req.user._id }
+                { owner: userid },
+                { members: userid }
             ]
-        }).sort({ updatedAt: -1 }); // Order by most recently updated
-        
+        }).sort({ updatedAt: -1 });
+
         res.json({ success: true, rooms });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        if (!error) {
+            throw Error('Problem in get')
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ success: false, message });
     }
 });
 
 // POST /api/rooms: Create a new room associated with the logged-in user
-router.post("/rooms", protect, async (req, res) => {
+router.post("/rooms", protect, async (req : Request, res : Response) => {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: "Not authorized" });
+        }
+
         const { roomId, name } = req.body;
-        
+
         const newRoom = await Room.create({
             roomId,
             name: name || "Untitled Workspace",
             owner: req.user._id
         });
-        
+
         res.status(201).json({ success: true, room: newRoom });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        const message = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ success: false, message });
     }
 });
 
 // DELETE /api/rooms/:roomId: Delete a workspace (requires ownership)
-router.delete("/rooms/:roomId", protect, async (req, res) => {
+router.delete("/rooms/:roomId", protect, async (req : Request, res : Response) => {
     try {
         const { roomId } = req.params;
+        if (!roomId) {
+            return res.status(400).json({ success: false, message: "roomId is required" });
+        }
         const room = await Room.findOne({ roomId });
-        
+
         if (!room) {
             return res.status(404).json({ success: false, message: "Workspace not found" });
         }
-        
+
         // Authorization check: only owner can delete the workspace
-        if (room.owner && room.owner.toString() !== req.user._id.toString()) {
+        if (room.owner && room.owner.toString() !== req.user?._id?.toString()) {
             return res.status(403).json({ success: false, message: "Not authorized to delete this workspace" });
         }
-        
+
         await Room.deleteOne({ roomId });
         res.json({ success: true, message: "Workspace deleted successfully" });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        const message = error instanceof Error ? error.message : String(error);
+        res.status(500).json({ success: false, message });
     }
 });
 

@@ -1,4 +1,26 @@
-import mongoose from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
+
+export interface IFile {
+    name : string;
+    content: string;
+    language: string;
+}
+
+export interface IRoom {
+    roomId : string;
+    files : IFile[];
+    activeFile : string;
+    owner : mongoose.Types.ObjectId;
+    members : mongoose.Types.ObjectId[];
+    name : string
+}
+
+export type FileDocument = HydratedDocument<IFile>;
+export type RoomDocument = HydratedDocument<IRoom>;
+
+
+
+
 
 const fileSchema = new mongoose.Schema({
     name: {
@@ -16,7 +38,7 @@ const fileSchema = new mongoose.Schema({
     }
 });
 
-const roomSchema = new mongoose.Schema({
+const roomSchema = new mongoose.Schema<IRoom>({
     roomId: { 
         type: String,
         required: true, 
@@ -53,5 +75,5 @@ const roomSchema = new mongoose.Schema({
     timestamps: true
 })
 
-
-export const Room = mongoose.model("Room",roomSchema)
+export const file = mongoose.model<IFile>("File",fileSchema)
+export const Room = mongoose.model<IRoom>("Room",roomSchema)

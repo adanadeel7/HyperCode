@@ -83,7 +83,8 @@ router.post("/execute", async (req, res) => {
 
     } catch (err) {
         if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
-        return res.status(500).json({ error: err.message });
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        return res.status(500).json({ error: errorMessage });
     }
 });
 

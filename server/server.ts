@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
-import app from "./src/app.js";
-import connectDB from "./src/config/db.js"; 
+import app from "./src/app";
+import connectDB from "./src/config/db"; 
 import { Room } from "./src/models/Room.models.js";
 import router from "./src/routes/auth.routes.js";
 
@@ -25,7 +25,7 @@ const userSocketMap = {};
 const saveTimeouts = {};
 
 
-function getAllConnectedClients(roomId) {
+function getAllConnectedClients(roomId : any) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {
         return {
             socketId,
@@ -34,7 +34,7 @@ function getAllConnectedClients(roomId) {
     });
 }
 
-io.on('connection', (socket) => {
+io.on('connection', (socket : any) => {
     console.log(`Socket Connected:`, socket.id);
 
     socket.on("join-room", async ({ roomId, currentUserName }) => {

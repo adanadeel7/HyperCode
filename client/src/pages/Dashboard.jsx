@@ -5,6 +5,8 @@ import { gsap } from "gsap";
 import { Plus, LogOut, ArrowRight, Code, Layout, Calendar, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 function Dashboard() {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/rooms", {
+        const response = await fetch(`${backendUrl}/api/rooms`, {
           credentials: "include", // Transmits JWT token cookie
         });
         const data = await response.json();
@@ -56,7 +58,7 @@ function Dashboard() {
     if (roomName === null) return; // Cancelled by user
 
     try {
-      const response = await fetch("http://localhost:8000/api/rooms", {
+      const response = await fetch(`${backendUrl}/api/rooms`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -91,7 +93,7 @@ function Dashboard() {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this workspace? This action cannot be undone.")) {
       try {
-        const response = await fetch(`http://localhost:8000/api/rooms/${roomId}`, {
+        const response = await fetch(`${backendUrl}/api/rooms/${roomId}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -110,7 +112,7 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:8000/api/auth/logout", { 
+      await fetch(`${backendUrl}/api/auth/logout`, { 
         method: "POST",
         credentials: "include"
       });

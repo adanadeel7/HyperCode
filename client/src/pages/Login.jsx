@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/authContext.jsx";
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,7 +30,7 @@ function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try { 
-      const response = await fetch("http://localhost:8000/api/auth/login",{
+      const response = await fetch(`${backendUrl}/api/auth/login`,{
         method : "POST", 
         credentials: "include", 
         headers: {
@@ -61,7 +63,7 @@ function Login() {
 
     try { 
       const displayName = name.trim() || email.split("@")[0] || "Developer";
-      const response = await fetch("http://localhost:8000/api/auth/register", { 
+      const response = await fetch(`${backendUrl}/api/auth/register`, { 
         method : "POST", 
         credentials : "include", 
         headers: {

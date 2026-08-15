@@ -1,7 +1,10 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/Users.models.js";
+import dotenv from 'dotenv'
+import { Request, Response, NextFunction } from "express";
+dotenv.config()
 
-const protect = async (req, res, next) => {
+const protect = async (req :Request, res :Response, next : NextFunction) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
@@ -15,7 +18,18 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) { 
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+
+    interface DecodedToken { 
+      id : string
+    }
+
+
+
+    const decoded = jwt.verify(token, jwtSecret) as DecodedToken; 
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {

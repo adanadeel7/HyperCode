@@ -3,18 +3,35 @@ import bcrypt from "bcryptjs";
 import { User } from "../models/Users.models.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { Request, Response } from "express";
 
 dotenv.config();
 
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  sameSite: (process.env.NODE_ENV === "production" ? "none" : "strict") as "none" | "strict" | "lax",
+
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
-const jwt_secret = process.env.JWT_SECRET;
 
-async function registerUser(req, res) {
+function getJWTSecret(): string { 
+  const secret = process.env.JWT_SECRET; 
+
+  if (!secret) { 
+    throw new Error("JWT_SECRET is not defined in environment")
+  }
+  return secret
+}
+
+
+const jwt_secret = getJWTSecret();
+
+if (!jwt_secret) { 
+  throw new Error("JWT_SECRET is not defined in environment")
+}
+
+async function registerUser(req : Request, res : Response) {
   try {
     const { name, email, password } = req.body;
 
@@ -55,13 +72,14 @@ async function registerUser(req, res) {
       },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "An unknown error occurred";
     return res
       .status(500)
-      .json({ message: "Registration failed", error: error.message });
+      .json({ message: "Registration failed", error: message });
   }
 }
 
-async function loginUser(req, res) {
+async function loginUser(req : Request, res : Response) {
   try {
     const { email, password } = req.body;
 
@@ -103,13 +121,14 @@ async function loginUser(req, res) {
       },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     return res
       .status(500)
-      .json({ message: "Login Failed", error: error.message });
+      .json({ message: "Login Failed", error: message });
   }
 }
 
-async function logoutUser(req, res) {
+async function logoutUser(req: Request, res: Response) {
   res.clearCookie("token");
   res.status(200).json({
     message: " User Successfully Logged out",
