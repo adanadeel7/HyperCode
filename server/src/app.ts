@@ -9,7 +9,24 @@ const app = express()
 
 // 1. Configure Global Middlewares First
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", 
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            "http://localhost:5173",
+            process.env.FRONTEND_URL
+        ].filter(Boolean);
+
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true, 
 }));
