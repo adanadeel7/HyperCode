@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
-import app from "./src/app";
-import connectDB from "./src/config/db"; 
+import app from "./src/app.js";
+import connectDB from "./src/config/db.js"; 
 import { Room } from "./src/models/Room.models.js";
 import router from "./src/routes/auth.routes.js";
 
