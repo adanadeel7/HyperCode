@@ -19,13 +19,10 @@ const io = new Server(server, {
     }
 });
 
-const userSocketMap = {};
+const userSocketMap: Record<string, { roomId: string; userName: string }> = {};
+const saveTimeouts: Record<string, NodeJS.Timeout> = {};
 
-
-const saveTimeouts = {};
-
-
-function getAllConnectedClients(roomId : any) {
+function getAllConnectedClients(roomId: string) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {
         return {
             socketId,
@@ -34,10 +31,10 @@ function getAllConnectedClients(roomId : any) {
     });
 }
 
-io.on('connection', (socket : any) => {
+io.on('connection', (socket: any) => {
     console.log(`Socket Connected:`, socket.id);
 
-    socket.on("join-room", async ({ roomId, currentUserName }) => {
+    socket.on("join-room", async ({ roomId, currentUserName }: { roomId: string; currentUserName: string }) => {
         userSocketMap[socket.id] = { roomId, userName: currentUserName };
         socket.join(roomId);
 
@@ -80,7 +77,7 @@ io.on('connection', (socket : any) => {
         });
     });
 
-    socket.on("code-change", ({ roomId, filename, code }) => {
+    socket.on("code-change", ({ roomId, filename, code }: { roomId: string; filename: string; code: string }) => {
         socket.to(roomId).emit("code-update", { filename, code });
 
         const saveKey = `${roomId}_${filename}`;
@@ -103,7 +100,7 @@ io.on('connection', (socket : any) => {
         }, 2000); 
     });
 
-    socket.on("create-file", async ({ roomId, filename, language }) => {
+    socket.on("create-file", async ({ roomId, filename, language }: { roomId: string; filename: string; language: string }) => {
         try {
             const newFile = { name: filename, content: "", language };
             const room = await Room.findOneAndUpdate(
@@ -120,7 +117,7 @@ io.on('connection', (socket : any) => {
         }
     });
 
-    socket.on("delete-file", async ({ roomId, filename }) => {
+    socket.on("delete-file", async ({ roomId, filename }: { roomId: string; filename: string }) => {
         try {
             const room = await Room.findOneAndUpdate(
                 { roomId },
@@ -130,7 +127,7 @@ io.on('connection', (socket : any) => {
             if (room) {
                 let nextActive = room.activeFile;
                 if (room.activeFile === filename) {
-                    nextActive = room.files.length > 0 ? room.files[0].name : "";
+                    nextActive = (room.files && room.files.length > 0) ? (room.files[0]?.name || "") : "";
                     room.activeFile = nextActive;
                     await room.save();
                 }
@@ -142,7 +139,7 @@ io.on('connection', (socket : any) => {
         }
     });
 
-    socket.on("select-file", async ({ roomId, filename }) => {
+    socket.on("select-file", async ({ roomId, filename }: { roomId: string; filename: string }) => {
         try {
             await Room.findOneAndUpdate({ roomId }, { activeFile: filename });
             socket.to(roomId).emit("file-selected", filename);
