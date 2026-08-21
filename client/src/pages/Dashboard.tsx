@@ -1,28 +1,60 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/authContext.jsx";
+import { useAuth } from "../context/authContext"; 
 import { gsap } from "gsap";
 import { Plus, LogOut, ArrowRight, Code, Layout, Calendar, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
+// --- Interfaces ---
+
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface FetchRoomsResponse extends ApiResponse {
+  rooms: Room[];
+}
+
+interface Room {
+  _id?: string;
+  roomId: string;
+  name: string;
+  language?: string;
+  updatedAt: string | Date;
+  owner?: string | { _id: string }; 
+}
+
+interface User {
+  _id?: string;
+  name: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+}
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 function Dashboard() {
-  const { user, setUser } = useAuth();
+  const { user, setUser } = useAuth() as AuthContextType;
   const navigate = useNavigate();
-  const glowRef = useRef(null);
-  const containerRef = useRef(null);
+  
+  const glowRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [roomIdInput, setRoomIdInput] = useState("");
-  const [recentRooms, setRecentRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [roomIdInput, setRoomIdInput] = useState<string>("");
+  const [recentRooms, setRecentRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!glowRef.current) return;
     const xTo = gsap.quickTo(glowRef.current, "x", { duration: 0.4, ease: "power3.out" });
     const yTo = gsap.quickTo(glowRef.current, "y", { duration: 0.4, ease: "power3.out" });
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       xTo(e.clientX);
       yTo(e.clientY);
     };
@@ -35,15 +67,15 @@ function Dashboard() {
     const fetchRooms = async () => {
       try {
         const response = await fetch(`${backendUrl}/api/rooms`, {
-          credentials: "include", // Transmits JWT token cookie
+          credentials: "include", 
         });
-        const data = await response.json();
+        const data = (await response.json()) as FetchRoomsResponse;
         if (response.ok && data.success) {
           setRecentRooms(data.rooms);
         } else {
           toast.error(data.message || "Failed to load workspaces");
         }
-      } catch (err) {
+      } catch (err: unknown) {
         toast.error("Error connecting to server");
       } finally {
         setLoading(false);
@@ -55,7 +87,7 @@ function Dashboard() {
   const handleCreateRoom = async () => {
     const generatedId = Math.random().toString(36).substring(2, 9);
     const roomName = prompt("Enter a name for your workspace:", "Untitled Workspace");
-    if (roomName === null) return; // Cancelled by user
+    if (roomName === null) return; 
 
     try {
       const response = await fetch(`${backendUrl}/api/rooms`, {
@@ -64,7 +96,7 @@ function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomId: generatedId, name: roomName })
       });
-      const data = await response.json();
+      const data = (await response.json()) as ApiResponse;
       if (response.ok && data.success) {
         toast.success("Workspace created!");
         navigate(`/editor/${generatedId}`, {
@@ -73,12 +105,12 @@ function Dashboard() {
       } else {
         toast.error(data.message || "Failed to create workspace");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error("Error creating workspace");
     }
   };
 
-  const handleJoinRoom = (e) => {
+  const handleJoinRoom = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!roomIdInput.trim()) {
       toast.error("Please enter a valid Room ID");
@@ -89,7 +121,7 @@ function Dashboard() {
     });
   };
 
-  const handleDeleteRoom = async (e, roomId) => {
+  const handleDeleteRoom = async (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this workspace? This action cannot be undone.")) {
       try {
@@ -97,14 +129,15 @@ function Dashboard() {
           method: "DELETE",
           credentials: "include"
         });
-        const data = await response.json();
+        const data = (await response.json()) as ApiResponse;
+        
         if (response.ok && data.success) {
           toast.success("Workspace deleted successfully!");
           setRecentRooms(prev => prev.filter(r => r.roomId !== roomId));
         } else {
           toast.error(data.message || "Failed to delete workspace");
         }
-      } catch (err) {
+      } catch (err: unknown) {
         toast.error("Error connecting to server");
       }
     }
@@ -119,9 +152,14 @@ function Dashboard() {
       setUser(null);
       toast.success("Logged out successfully");
       navigate("/");
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error("Logout failed");
     }
+  };
+
+  const getOwnerId = (owner: Room["owner"]) => {
+    if (!owner) return null;
+    return typeof owner === "string" ? owner : owner._id;
   };
 
   return (
@@ -250,7 +288,7 @@ function Dashboard() {
                               <Calendar className="w-3 h-3" /> {new Date(room.updatedAt).toLocaleDateString()}
                             </span>
                           </div>
-                          {((room.owner?._id || room.owner) === user?._id) && (
+                          {getOwnerId(room.owner) === user?._id && (
                             <button
                               onClick={(e) => handleDeleteRoom(e, room.roomId)}
                               className="text-[#808e93] hover:text-red-400 p-1.5 rounded transition-all cursor-pointer hover:bg-[#2d3547]/30 z-30"

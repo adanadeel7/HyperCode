@@ -1,16 +1,17 @@
 import './App.css'
 import { BrowserRouter, Routes,Route } from 'react-router-dom'
-import Room from './pages/Room.jsx'
-import Editor from './pages/Editor.jsx'
-import Login from './pages/Login.jsx'
-import ProtectedRoute from './pages/ProtectedRoute.jsx'
-import Dashboard from './pages/Dashboard.jsx'
+import Room from './pages/Room.tsx'
+import Editor from './pages/Editor.tsx'
+import Login from './pages/Login.tsx'
+import ProtectedRoute from './pages/ProtectedRoute.tsx'
+import Dashboard from './pages/Dashboard.tsx'
 
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './context/authContext.jsx'
 
 function App() {
-  const { user } = useAuth()
+  
+  const { user} : any = useAuth()
 
   return (
     <>

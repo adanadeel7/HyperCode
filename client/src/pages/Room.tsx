@@ -14,7 +14,7 @@ function Room() {
     const xTo = gsap.quickTo(glowRef.current, "x", {duration: 0.4, ease: "power3.out"})
     const yTo = gsap.quickTo(glowRef.current, "y", {duration: 0.4, ease: "power3.out"})
     
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e : MouseEvent) => {
       xTo(e.clientX);
       yTo(e.clientY);
     };
@@ -23,7 +23,7 @@ function Room() {
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, []); 
 
-  const createNewRoom = (e) => { 
+  const createNewRoom = () => { 
     const id = uuid()
     setRoom(id)
     navigate(`/editor/${id}`, { 

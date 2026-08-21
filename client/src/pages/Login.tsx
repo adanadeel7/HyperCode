@@ -1,14 +1,30 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { v4 as uuid } from "uuid";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useAuth } from "../context/authContext.jsx";
+import { useAuth } from "../context/authContext";
+
+
+interface User {
+  _id?: string;
+  name: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+}
+
+interface AuthResponse {
+  message?: string;
+  user: User;
+}
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 function Login() {
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,81 +33,90 @@ function Login() {
 
   const { name, email, password } = formData;
 
-  const onChange = (e) => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
       ...prevState,
       [e.target.name]: e.target.value,
     }));
   };
 
-  const { setUser } = useAuth();
+  const { setUser } = useAuth() as AuthContextType;
   const navigate = useNavigate();
 
-  const onSubmit = async (e) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try { 
-      const response = await fetch(`${backendUrl}/api/auth/login`,{
-        method : "POST", 
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
+        method: "POST", 
         credentials: "include", 
         headers: {
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json"
         }, 
-        body:JSON.stringify({
+        body: JSON.stringify({
           email, 
           password,
         })
-      })
+      });
 
-      const data = await response.json(); 
+      const data = (await response.json()) as AuthResponse; 
 
       if (!response.ok) { 
-        toast.error(data.message || "Logical Failed")
+        toast.error(data.message || "Login Failed");
         return;
       }
 
-      toast.success("Logged in Successfully")
+      toast.success("Logged in Successfully");
       setUser(data.user);
       navigate("/room");
-    } catch (error) { 
-      toast.error(error.message);
+    } catch (error: unknown) { 
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
 
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 
 
     try { 
       const displayName = name.trim() || email.split("@")[0] || "Developer";
       const response = await fetch(`${backendUrl}/api/auth/register`, { 
-        method : "POST", 
-        credentials : "include", 
+        method: "POST", 
+        credentials: "include", 
         headers: {
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json"
         }, 
-        body : JSON.stringify({
+        body: JSON.stringify({
           name: displayName,
           email,
           password,
         })
-      })
-      const data = await response.json(); 
+      });
+      
+      const data = (await response.json()) as AuthResponse; 
 
       if (!response.ok) { 
-        toast.error(data.message || "Registration failed")
+        toast.error(data.message || "Registration failed");
         return;
       }
 
-      toast.success("Account Created")
+      toast.success("Account Created");
       setUser(data.user);
-      navigate("/room")
-    } catch (error) {
-      toast.error(error.message)
+      navigate("/room");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
+  };
 
-  }
+  const glowRef = useRef<HTMLDivElement>(null);
 
-  const glowRef = useRef(null);
   useEffect(() => {
     if (!glowRef.current) return;
 
@@ -104,7 +129,7 @@ function Login() {
       ease: "power3.out",
     });
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       xTo(e.clientX);
       yTo(e.clientY);
     };

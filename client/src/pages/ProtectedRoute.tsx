@@ -1,13 +1,18 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
-function ProtectedRoute({user, children}) {
-  if (!user) { 
-    return (
-    <Navigate to="/" replace/>
-  )
-  }
-  
-  return children;
+import React, { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
+
+
+interface ProtectedRouteProps {
+  user: unknown; 
+  children: ReactNode;
 }
 
-export default ProtectedRoute
+function ProtectedRoute({ user, children }: ProtectedRouteProps) {
+  if (!user) { 
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
+export default ProtectedRoute;

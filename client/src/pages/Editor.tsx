@@ -4,41 +4,71 @@ import { gsap } from "gsap";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
 import toast from "react-hot-toast";
-import { initSocket } from "../socket.js";
+import { initSocket } from "../socket.js"; 
+
+
+interface LocationState {
+  room?: string;
+  userName?: string;
+}
+
+interface Client {
+  socketId: string;
+  userName: string;
+}
+
+interface WorkspaceFile {
+  name: string;
+  content: string;
+}
+
+interface FileDeletedPayload {
+  filename: string;
+  nextActive: string;
+}
+
+interface ExecuteResponse {
+  output?: string;
+}
+
+interface SocketInstance {
+  on: (event: string, callback: (...args: any[]) => void) => void;
+  emit: (event: string, data?: any) => void;
+  disconnect: () => void;
+}
 
 function Editor() {
   const navigate = useNavigate();
-  const containerRef = useRef(null);
-  const glowRef = useRef(null);
-  const headerRef = useRef(null);
-  const sidebarRef = useRef(null);
-  const mainWorkspaceRef = useRef(null);
-  const socketRef = useRef(null); 
-
-  const { id } = useParams(); 
-  const location = useLocation();
-  const passedState = location.state || {}; 
-
-  const [roomId, setRoomId] = useState(id || passedState.room || "ALPHA-9");
-  const [currentUserName, setCurrentUserName] = useState(passedState.userName || "Adan Adeel");
-  const [isCopied, setIsCopied] = useState(false);
-  const [clients, setClients] = useState([]);
-
-  // Multi-file states
-  const [files, setFiles] = useState([]);
-  const [activeFile, setActiveFile] = useState("main.js");
-  const [code, setCode] = useState(`// Loading workspace from cloud layer...`);
   
-  const [newFileName, setNewFileName] = useState("");
-  const [showNewFileInput, setShowNewFileInput] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const mainWorkspaceRef = useRef<HTMLElement>(null);
+  const socketRef = useRef<SocketInstance | null>(null); 
 
-  const [terminalLogs, setTerminalLogs] = useState([
+  const { id } = useParams<{ id: string }>(); 
+  const location = useLocation();
+  const passedState = (location.state as LocationState) || {}; 
+
+  const [roomId, setRoomId] = useState<string>(id || passedState.room || "ALPHA-9");
+  const [currentUserName, setCurrentUserName] = useState<string>(passedState.userName || "Adan Adeel");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  const [files, setFiles] = useState<WorkspaceFile[]>([]);
+  const [activeFile, setActiveFile] = useState<string>("main.js");
+  const [code, setCode] = useState<string>(`// Loading workspace from cloud layer...`);
+  
+  const [newFileName, setNewFileName] = useState<string>("");
+  const [showNewFileInput, setShowNewFileInput] = useState<boolean>(false);
+
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([
     `[System]: Terminal session initialized for developer: ${passedState.userName || "Adan Adeel"}`
   ]);
 
-  // Helper to determine language for Monaco editor
-  const getLanguageFromFilename = (filename) => {
-    const ext = filename.split('.').pop().toLowerCase();
+  const getLanguageFromFilename = (filename: string): string => {
+    const ext = filename.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'js': return 'javascript';
       case 'py': return 'python';
@@ -49,9 +79,8 @@ function Editor() {
     }
   };
 
-  // Helper to get file icons
-  const getFileIcon = (filename) => {
-    const ext = filename.split('.').pop().toLowerCase();
+  const getFileIcon = (filename: string) => {
+    const ext = filename.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'html': return <Globe className="w-3.5 h-3.5 text-orange-400" />;
       case 'css': return <FileText className="w-3.5 h-3.5 text-pink-400" />;
@@ -62,9 +91,8 @@ function Editor() {
     }
   };
 
-  // Refs to prevent connection teardown loops on keystroke change
-  const activeFileRef = useRef(activeFile);
-  const filesRef = useRef(files);
+  const activeFileRef = useRef<string>(activeFile);
+  const filesRef = useRef<WorkspaceFile[]>(files);
 
   useEffect(() => {
     activeFileRef.current = activeFile;
@@ -79,15 +107,12 @@ function Editor() {
     let isMounted = true;
 
     const initConnection = async () => { 
-      // Force disconnect any accidental ghost connections before establishing a new hook
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
 
-      // Initialize frontend communication tunnel link
       const socketInstance = await initSocket();
       
-      // Safety abort if component unmounted mid-handshake
       if (!isMounted) {
         socketInstance.disconnect();
         return;
@@ -95,24 +120,23 @@ function Editor() {
 
       socketRef.current = socketInstance;
 
-      socketRef.current.on("connect_error", (err) => handleErrors(err));
-      socketRef.current.on("connect_failed", (err) => handleErrors(err));
+      socketRef.current.on("connect_error", (err: Error) => handleErrors(err));
+      socketRef.current.on("connect_failed", (err: Error) => handleErrors(err));
 
-      function handleErrors(e) {
+      function handleErrors(e: Error) {
         console.error("Socket link connection exception encountered", e);
         if (isMounted) {
           setTerminalLogs((p) => [...p, "[Error]: Dynamic system synchronization fallback failing."]);
         }
       }
 
-      // Handshake Join request broadcasted explicitly with key parameters matching backend expected keys
       socketRef.current.emit("join-room", { 
         roomId, 
         currentUserName
       });
 
-      // LISTEN 1: Catch acknowledgement response when joining room successfully (Includes MongoDB persistence state)
-      socketRef.current.on("room-joined-success", ({ clients, files: roomFiles, activeFile: roomActiveFile }) => {
+      // LISTEN 1: Catch acknowledgement response when joining room successfully
+      socketRef.current.on("room-joined-success", ({ clients, files: roomFiles, activeFile: roomActiveFile }: { clients: Client[], files: WorkspaceFile[], activeFile: string }) => {
         if (!isMounted) return;
         setClients(clients);
         if (roomFiles && roomFiles.length > 0) {
@@ -127,7 +151,7 @@ function Editor() {
       });
 
       // LISTEN 2: Fired when any peer enters the channel matrix context
-      socketRef.current.on("user-joined", ({ userName, clients }) => {
+      socketRef.current.on("user-joined", ({ userName, clients }: { userName: string, clients: Client[] }) => {
         if (isMounted) {
           setClients(clients);
           setTerminalLogs((p) => [...p, `[System]: Peer connection established: ${userName || "A developer"} entered workspace.`]);
@@ -135,7 +159,7 @@ function Editor() {
       });
 
       // LISTEN 3: Real-time Incoming Document Keystroke Stream Sync Updates
-      socketRef.current.on("code-update", ({ filename, code: incomingCode }) => {
+      socketRef.current.on("code-update", ({ filename, code: incomingCode }: { filename: string, code: string }) => {
         if (!isMounted) return;
         
         setFiles(prev => prev.map(f => f.name === filename ? { ...f, content: incomingCode } : f));
@@ -146,7 +170,7 @@ function Editor() {
       });
 
       // LISTEN 4: Fired when new file is created in workspace
-      socketRef.current.on("file-created", (newFile) => {
+      socketRef.current.on("file-created", (newFile: WorkspaceFile) => {
         if (!isMounted) return;
         setFiles(prev => {
           if (prev.some(f => f.name === newFile.name)) return prev;
@@ -156,7 +180,7 @@ function Editor() {
       });
 
       // LISTEN 5: Fired when a file is deleted from workspace
-      socketRef.current.on("file-deleted", ({ filename, nextActive }) => {
+      socketRef.current.on("file-deleted", ({ filename, nextActive }: FileDeletedPayload) => {
         if (!isMounted) return;
         setFiles(prev => prev.filter(f => f.name !== filename));
         if (activeFileRef.current === filename) {
@@ -168,7 +192,7 @@ function Editor() {
       });
 
       // LISTEN 6: Fired when another user shifts focus to a different file
-      socketRef.current.on("file-selected", (filename) => {
+      socketRef.current.on("file-selected", (filename: string) => {
         if (!isMounted) return;
         setActiveFile(filename);
         const fileObj = filesRef.current.find(file => file.name === filename);
@@ -176,7 +200,7 @@ function Editor() {
       });
 
       // LISTEN 7: Fired when an alternative peer leaves or closes their workspace browser tab
-      socketRef.current.on("user-left", ({ userName, socketId, clients: updatedClients }) => {
+      socketRef.current.on("user-left", ({ userName, socketId, clients: updatedClients }: { userName: string, socketId: string, clients: Client[] }) => {
         if (!isMounted) return;
         setTerminalLogs((p) => [...p, `[System]: Peer connection terminated: ${userName || "A developer"} left workspace.`]);
         
@@ -190,7 +214,6 @@ function Editor() {
 
     initConnection();
 
-    // Clean up completely on unmount
     return () => {
       isMounted = false;
       if (socketRef.current) {
@@ -200,21 +223,21 @@ function Editor() {
     };
   }, [roomId, currentUserName]);
 
-  // 2. Outgoing Sync Handlers: Notify peers on local keystroke changes
-  const handleCodeChange = (value) => {
-    setCode(value);
-    setFiles(prev => prev.map(f => f.name === activeFile ? { ...f, content: value } : f));
+  const handleCodeChange = (value: string | undefined) => {
+    const safeValue = value || "";
+    setCode(safeValue);
+    setFiles(prev => prev.map(f => f.name === activeFile ? { ...f, content: safeValue } : f));
 
     if (socketRef.current) {
       socketRef.current.emit("code-change", {
         roomId,
         filename: activeFile,
-        code: value
+        code: safeValue
       });
     }
   };
 
-  const handleSelectFile = (filename) => {
+  const handleSelectFile = (filename: string) => {
     setActiveFile(filename);
     const fileObj = files.find(file => file.name === filename);
     setCode(fileObj ? fileObj.content : "");
@@ -223,7 +246,7 @@ function Editor() {
     }
   };
 
-  const handleCreateFile = (e) => {
+  const handleCreateFile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newFileName.trim()) return;
 
@@ -232,7 +255,7 @@ function Editor() {
       return;
     }
 
-    const ext = newFileName.split('.').pop().toLowerCase();
+    const ext = newFileName.split('.').pop()?.toLowerCase();
     let language = "javascript";
     if (ext === "py") language = "python";
     else if (ext === "cpp") language = "cpp";
@@ -248,7 +271,7 @@ function Editor() {
     toast.success(`File "${newFileName}" created!`);
   };
 
-  const handleDeleteFile = (e, filename) => {
+  const handleDeleteFile = (e: React.MouseEvent<HTMLButtonElement>, filename: string) => {
     e.stopPropagation();
     if (files.length <= 1) {
       toast.error("At least one file must remain in the workspace.");
@@ -269,7 +292,7 @@ function Editor() {
     const xTo = gsap.quickTo(glowRef.current, "x", { duration: 0.4, ease: "power3.out" });
     const yTo = gsap.quickTo(glowRef.current, "y", { duration: 0.4, ease: "power3.out" });
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       xTo(e.clientX);
       yTo(e.clientY);
     };
@@ -277,7 +300,6 @@ function Editor() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Entrance Stagger Animation on Mount
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline();
@@ -314,7 +336,7 @@ function Editor() {
         body: JSON.stringify({ code, filename: activeFile }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ExecuteResponse;
 
       if (data.output) {
         const cleanLogs = data.output.trim().split("\n");
@@ -329,7 +351,6 @@ function Editor() {
     }
   };
 
-  // Generate srcDoc for HTML preview if there are web files in the workspace
   const getHtmlPreviewDoc = () => {
     const htmlFile = files.find(f => f.name.endsWith('.html')) || { content: "" };
     const cssFile = files.find(f => f.name.endsWith('.css')) || { content: "" };
@@ -362,9 +383,8 @@ function Editor() {
     `;
   };
 
-  // Handle preview messages (console logs from inside the preview iframe)
   useEffect(() => {
-    const handlePreviewMessages = (event) => {
+    const handlePreviewMessages = (event: MessageEvent) => {
       if (event.data && event.data.type === 'CONSOLE_LOG') {
         setTerminalLogs(prev => [...prev, `[Iframe Preview Console]: ${event.data.data}`]);
       }
