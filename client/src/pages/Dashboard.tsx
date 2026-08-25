@@ -36,7 +36,7 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "https://hypercode-18ib.onrender.com" : "http://localhost:8000");
 
 function Dashboard() {
   const { user, setUser } = useAuth() as AuthContextType;

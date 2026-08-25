@@ -326,7 +326,7 @@ function Editor() {
     setTerminalLogs((prev) => [...prev, `[Running]: Executing compiler engine for ${activeFile}...`]);
     
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "https://hypercode-18ib.onrender.com" : "http://localhost:8000");
       const token = localStorage.getItem("token");
 
       const response = await fetch(`${backendUrl}/api/execute`, {
