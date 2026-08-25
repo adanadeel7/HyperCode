@@ -264,7 +264,10 @@ function Login() {
 
             <button
               type="button"
-              onClick={() => window.location.href = `${backendUrl}/api/auth/google`}
+              onClick={() => {
+                const origin = encodeURIComponent(window.location.origin);
+                window.location.href = `${backendUrl}/api/auth/google?origin=${origin}`;
+              }}
               className="flex items-center justify-center w-full bg-white/5 hover:bg-white/10 border border-[#3a494a]/50 text-[#cbdfe2] py-2.5 rounded transition-all cursor-pointer font-editor text-[14px]"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

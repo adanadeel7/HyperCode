@@ -143,7 +143,18 @@ async function logoutUser(req: Request, res: Response) {
 
 function googleAuthCallback(req: Request, res: Response) { 
   const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
-  const frontendUrl = (process.env.FRONTEND_URL || (isProduction ? "https://hyper-code-bnkar1hrn-adan21.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
+  let frontendUrl = (process.env.FRONTEND_URL || (isProduction ? "https://hyper-code.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
+
+  if (req.query.state) {
+    try {
+      const parsed = JSON.parse(Buffer.from(String(req.query.state), "base64").toString("utf8"));
+      if (parsed.origin) {
+        frontendUrl = String(parsed.origin).replace(/\/$/, "");
+      }
+    } catch (e) {
+      console.warn("Failed to parse OAuth state parameter:", e);
+    }
+  }
 
   try {
     if (!req.user) { 
