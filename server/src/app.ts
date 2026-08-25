@@ -7,9 +7,10 @@ import cookieParser from "cookie-parser";
 import passport from "passport";
 import './config/passport.js';
 
-const app = express()
+const app = express();
 
-// 1. Configure Global Middlewares First
+app.set("trust proxy", 1);
+
 app.use(cors({
     origin: (origin, callback) => {
         const allowedOrigins = [
@@ -22,12 +23,12 @@ app.use(cors({
             return callback(null, true);
         }
 
-        const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
+        const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.includes("localhost");
 
         if (isAllowed) {
             callback(null, true);
         } else {
-            callback(new Error("Not allowed by CORS"));
+            callback(null, false);
         }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -39,17 +40,26 @@ app.use(passport.initialize());
 
 // 2. Base Health Check
 app.get('/' , (req,res) => { 
-    res.send("API Working")
-})
+    res.send("API Working");
+});
 
 app.get('/health', (req,res) => { 
-    res.send("API Working")
-})
-
+    res.send("API Working");
+});
 
 // 3. Mount Routes
 app.use("/api/auth", authRouter);
 app.use("/api", roomRouter);
 app.use("/api", compilerRouter);
+
+// 4. Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("Unhandled Server Error:", err);
+    const status = err.status || err.statusCode || 500;
+    res.status(status).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+});
 
 export default app;

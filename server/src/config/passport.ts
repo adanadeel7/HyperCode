@@ -15,11 +15,16 @@ passport.use(
     new GoogleStrategy({
         clientID: clientid, 
         clientSecret: clientsecret, 
-        callbackURL: callback
+        callbackURL: callback,
+        proxy: true
     }, 
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
             const email = profile.emails && profile.emails[0] ? profile.emails[0].value : "";
+
+            if (!email) {
+                return done(new Error("No email found in Google profile"), undefined);
+            }
 
             let user = await User.findOne({ email: email });
             
@@ -30,7 +35,7 @@ passport.use(
                 }
             } else { 
                 user = await User.create({
-                    name: profile.displayName, 
+                    name: profile.displayName || (profile.name ? `${profile.name.givenName || ""} ${profile.name.familyName || ""}`.trim() : "") || email.split("@")[0] || "User", 
                     email: email, 
                     googleId: profile.id
                 });
@@ -38,6 +43,7 @@ passport.use(
 
             return done(null, user);
         } catch(err) { 
+            console.error("Google Auth Strategy Exception:", err);
             return done(err as Error, undefined);
         }
     })

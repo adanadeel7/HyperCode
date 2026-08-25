@@ -141,28 +141,39 @@ async function logoutUser(req: Request, res: Response) {
   });
 }
 
- function googleAuthCallback(req:Request, res:Response) { 
+function googleAuthCallback(req: Request, res: Response) { 
   const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "https://hyper-code-bnkar1hrn-adan21.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
 
-  if (!req.user) { 
-    return res.redirect(`${frontendUrl}/login`);
-  }
-  const user = req.user as UserDocument;
+  try {
+    if (!req.user) { 
+      return res.redirect(`${frontendUrl}/login?error=auth_failed`);
+    }
+    const user = req.user as UserDocument;
 
-  const token = jwt.sign(
-        { id: user._id}, 
-        process.env.JWT_SECRET!, 
-        { expiresIn: '1h' }
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("JWT_SECRET environment variable is missing!");
+      return res.redirect(`${frontendUrl}/login?error=server_configuration_error`);
+    }
+
+    const token = jwt.sign(
+      { id: user._id }, 
+      jwtSecret, 
+      { expiresIn: "7d" }
     );
 
     res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
-        maxAge: 3600000, 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
   
-    res.redirect(`${frontendUrl}/?token=${token}`);
+    return res.redirect(`${frontendUrl}/?token=${token}`);
+  } catch (error) {
+    console.error("googleAuthCallback exception:", error);
+    return res.redirect(`${frontendUrl}/login?error=oauth_callback_exception`);
+  }
 }
 
 
