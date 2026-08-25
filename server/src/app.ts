@@ -14,6 +14,7 @@ app.use(cors({
     origin: (origin, callback) => {
         const allowedOrigins = [
             "http://localhost:5173",
+            "https://hyper-code-bnkar1hrn-adan21.vercel.app",
             process.env.FRONTEND_URL
         ].filter(Boolean);
 

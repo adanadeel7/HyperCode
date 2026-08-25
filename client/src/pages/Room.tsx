@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import {v4 as uuid} from "uuid"
 import {useNavigate} from "react-router-dom"

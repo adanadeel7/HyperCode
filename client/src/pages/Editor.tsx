@@ -51,8 +51,8 @@ function Editor() {
   const location = useLocation();
   const passedState = (location.state as LocationState) || {}; 
 
-  const [roomId, setRoomId] = useState<string>(id || passedState.room || "ALPHA-9");
-  const [currentUserName, setCurrentUserName] = useState<string>(passedState.userName || "Adan Adeel");
+  const [roomId] = useState<string>(id || passedState.room || "ALPHA-9");
+  const [currentUserName] = useState<string>(passedState.userName || "Adan Adeel");
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [clients, setClients] = useState<Client[]>([]);
 

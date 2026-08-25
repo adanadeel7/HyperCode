@@ -1,13 +1,12 @@
 import './App.css'
-import { BrowserRouter, Routes,Route } from 'react-router-dom'
-import Room from './pages/Room.tsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Editor from './pages/Editor.tsx'
 import Login from './pages/Login.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 
 import { Toaster } from 'react-hot-toast'
-import { useAuth } from './context/authContext.jsx'
+import { useAuth } from './context/authContext.tsx'
 
 function App() {
   

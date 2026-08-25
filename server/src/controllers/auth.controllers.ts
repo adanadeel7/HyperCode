@@ -142,10 +142,12 @@ async function logoutUser(req: Request, res: Response) {
 }
 
  function googleAuthCallback(req:Request, res:Response) { 
+  const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "https://hyper-code-bnkar1hrn-adan21.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
+
   if (!req.user) { 
-    return res.redirect('http://localhost:8000/login');
+    return res.redirect(`${frontendUrl}/login`);
   }
-  const user = req.user as UserDocument
+  const user = req.user as UserDocument;
 
   const token = jwt.sign(
         { id: user._id}, 
@@ -156,11 +158,11 @@ async function logoutUser(req: Request, res: Response) {
     res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
         maxAge: 3600000, // 1 hour in milliseconds
     });
   
-    res.redirect(`http://localhost:5173/?token=${token}`);
+    res.redirect(`${frontendUrl}/?token=${token}`);
 }
 
 
