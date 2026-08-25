@@ -5,8 +5,10 @@ import { User } from "../models/Users.models.js";
 const clientid = process.env.GOOGLE_CLIENT_ID!;
 const clientsecret = process.env.GOOGLE_CLIENT_SECRET!;
 
+const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
+
 const callback = process.env.GOOGLE_CALLBACK_URL || (
-    process.env.NODE_ENV === "production" 
+    isProduction 
         ? "https://hypercode-18ib.onrender.com/api/auth/google/callback" 
         : "http://localhost:8000/api/auth/google/callback"
 );
