@@ -9,6 +9,6 @@ router.post('/logout', logoutUser);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email']}))
 const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "https://hyper-code-bnkar1hrn-adan21.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
 
-router.get('/google/callback', passport.authenticate('google', { session : false, failureRedirect : `${frontendUrl}/login`}), googleAuthCallback);
+router.get('/google/callback', passport.authenticate('google', { session : false, failureRedirect : `${frontendUrl}/`}), googleAuthCallback);
 
 export default router;

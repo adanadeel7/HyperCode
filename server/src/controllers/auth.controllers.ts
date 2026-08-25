@@ -159,7 +159,7 @@ async function logoutUser(req: Request, res: Response) {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
-        maxAge: 3600000, // 1 hour in milliseconds
+        maxAge: 3600000, 
     });
   
     res.redirect(`${frontendUrl}/?token=${token}`);
