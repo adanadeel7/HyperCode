@@ -2,8 +2,8 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import passport from "passport";
 import { User } from "../models/Users.models.js"; 
 
-const clientid = process.env.GOOGLE_CLIENT_ID!;
-const clientsecret = process.env.GOOGLE_CLIENT_SECRET!;
+const clientid = (process.env.GOOGLE_CLIENT_ID || "").trim().replace(/^["']|["']$/g, "");
+const clientsecret = (process.env.GOOGLE_CLIENT_SECRET || "").trim().replace(/^["']|["']$/g, "");
 
 const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 
