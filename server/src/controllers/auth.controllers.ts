@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { User } from "../models/Users.models.js";
+import { UserDocument,User } from "../models/Users.models.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
+import { error } from "node:console";
 
 dotenv.config();
 
@@ -92,8 +93,13 @@ async function loginUser(req : Request, res : Response) {
         message: "Invalid email or password",
       });
     }
+    const Userpassword = user.password
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!Userpassword) { 
+      throw Error( "Password not found")
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, Userpassword);
 
     if (!isPasswordValid) {
       return res.status(400).json({
@@ -135,4 +141,27 @@ async function logoutUser(req: Request, res: Response) {
   });
 }
 
-export { registerUser, loginUser, logoutUser };
+ function googleAuthCallback(req:Request, res:Response) { 
+  if (!req.user) { 
+    return res.redirect('http://localhost:8000/login');
+  }
+  const user = req.user as UserDocument
+
+  const token = jwt.sign(
+        { id: user._id}, 
+        process.env.JWT_SECRET!, 
+        { expiresIn: '1h' }
+    );
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 3600000, // 1 hour in milliseconds
+    });
+  
+    res.redirect(`http://localhost:5173/?token=${token}`);
+}
+
+
+export { registerUser, loginUser, logoutUser,googleAuthCallback };

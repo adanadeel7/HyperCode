@@ -5,7 +5,8 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface UserDocument extends Document{
     name : string; 
     email: string;
-    password: string;
+    password?: string;
+    googleId ?: string; 
 }
 
 const userSchema = new mongoose.Schema<UserDocument>( { 
@@ -22,8 +23,16 @@ const userSchema = new mongoose.Schema<UserDocument>( {
 
     password : { 
         type : String, 
-        required : true, 
+        required: function(this: any) {
+        return !this.googleId; 
+        }
     },
+
+    googleId : { 
+        type: String, 
+        unique : true,
+        sparse : true
+    }
 
 
 

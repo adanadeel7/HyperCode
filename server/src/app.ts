@@ -4,6 +4,8 @@ import cors from "cors";
 import authRouter from "./routes/auth.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import cookieParser from "cookie-parser";
+import passport from "passport";
+import './config/passport';
 
 const app = express()
 
@@ -32,11 +34,17 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
 // 2. Base Health Check
-app.get('/', (req,res) => { 
+app.get('/' , (req,res) => { 
     res.send("API Working")
 })
+
+app.get('/health', (req,res) => { 
+    res.send("API Working")
+})
+
 
 // 3. Mount Routes
 app.use("/api/auth", authRouter);

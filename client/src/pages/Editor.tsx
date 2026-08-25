@@ -327,11 +327,13 @@ function Editor() {
     
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-      
+      const token = localStorage.getItem("token");
+
       const response = await fetch(`${backendUrl}/api/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ code, filename: activeFile }),
       });
