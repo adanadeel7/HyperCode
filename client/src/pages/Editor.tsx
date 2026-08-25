@@ -5,6 +5,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
 import toast from "react-hot-toast";
 import { initSocket } from "../socket.js"; 
+import { BACKEND_URL as backendUrl } from "../config"; 
 
 
 interface LocationState {
@@ -326,7 +327,6 @@ function Editor() {
     setTerminalLogs((prev) => [...prev, `[Running]: Executing compiler engine for ${activeFile}...`]);
     
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "https://hypercode-18ib.onrender.com" : "http://localhost:8000");
       const token = localStorage.getItem("token");
 
       const response = await fetch(`${backendUrl}/api/execute`, {

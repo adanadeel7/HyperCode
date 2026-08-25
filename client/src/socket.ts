@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+import { BACKEND_URL as backendUrl } from "./config";
 
 interface SocketOptions { 
     'force new connection': boolean;
@@ -17,6 +18,5 @@ export const initSocket = async () => {
         transports: ['websocket']
     };
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "https://hypercode-18ib.onrender.com" : "http://localhost:8000");
     return io(backendUrl, options);
 };

@@ -22,7 +22,7 @@ interface AuthResponse {
   user: User;
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "https://hypercode-18ib.onrender.com" : "http://localhost:8000");
+import { BACKEND_URL as backendUrl } from "../config";
 
 function Login() {
   const [isRegister, setIsRegister] = useState<boolean>(false);
