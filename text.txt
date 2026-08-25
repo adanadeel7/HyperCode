@@ -1,4 +1,3 @@
-google login 
 access refreach token 
 timer
 2fa
