@@ -8,9 +8,9 @@ const router = Router();
 
 // GET /api/rooms: Fetch all rooms owned by or shared with the user
 router.get("/rooms", protect, async (req : Request, res : Response) => {
-    const userid = req.user?._id
+    const userid = req.user?._id;
     if (!userid) {
-        throw Error('No userid ')
+        return res.status(401).json({ success: false, message: "User authentication required" });
     }
 
     try {

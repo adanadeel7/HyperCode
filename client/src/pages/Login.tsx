@@ -18,6 +18,7 @@ interface AuthContextType {
 
 interface AuthResponse {
   message?: string;
+  token?: string;
   user: User;
 }
 
@@ -44,20 +45,22 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(()=> { 
-    const urlParams = new URLSearchParams(location.search)
-    const token = urlParams.get("token")
+  useEffect(() => { 
+    const urlParams = new URLSearchParams(location.search);
+    const token = urlParams.get("token");
+    const error = urlParams.get("error");
 
+    if (error) {
+      toast.error(`Authentication error: ${error}`);
+    }
 
     if (token) { 
-      localStorage.setItem("token",token)
-
-      setUser({name : "Developer", email : "google-user@example.com"})
+      localStorage.setItem("token", token);
+      setUser({ name: "Developer", email: "google-user@hypercode.dev" });
       toast.success("Logged in with Google!");
-      navigate("/room", { replace: true })
+      navigate("/room", { replace: true });
     }
-  },[location, navigate, setUser])
-
+  }, [location, navigate, setUser]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,6 +84,10 @@ function Login() {
         return;
       }
 
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       toast.success("Logged in Successfully");
       setUser(data.user);
       navigate("/room");
@@ -92,7 +99,6 @@ function Login() {
       }
     }
   };
-
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 
@@ -119,10 +125,14 @@ function Login() {
         return;
       }
 
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       toast.success("Account Created");
       setUser(data.user);
       navigate("/room");
-    } catch (error: unknown) {
+    } catch (error: unknown) { 
       if (error instanceof Error) {
         toast.error(error.message);
       } else {

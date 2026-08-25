@@ -66,8 +66,10 @@ function Dashboard() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${backendUrl}/api/rooms`, {
           credentials: "include", 
+          headers: token ? { "Authorization": `Bearer ${token}` } : {}
         });
         const data = (await response.json()) as FetchRoomsResponse;
         if (response.ok && data.success) {
@@ -90,10 +92,14 @@ function Dashboard() {
     if (roomName === null) return; 
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`${backendUrl}/api/rooms`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ roomId: generatedId, name: roomName })
       });
       const data = (await response.json()) as ApiResponse;
@@ -125,9 +131,11 @@ function Dashboard() {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this workspace? This action cannot be undone.")) {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${backendUrl}/api/rooms/${roomId}`, {
           method: "DELETE",
-          credentials: "include"
+          credentials: "include",
+          headers: token ? { "Authorization": `Bearer ${token}` } : {}
         });
         const data = (await response.json()) as ApiResponse;
         
@@ -145,11 +153,15 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
+      const token = localStorage.getItem("token");
       await fetch(`${backendUrl}/api/auth/logout`, { 
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
       });
       setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       toast.success("Logged out successfully");
       navigate("/");
     } catch (err: unknown) {
