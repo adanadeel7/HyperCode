@@ -5,7 +5,7 @@ import authRouter from "./routes/auth.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import cookieParser from "cookie-parser";
 import passport from "passport";
-import './config/passport';
+import './config/passport.js';
 
 const app = express()
 
