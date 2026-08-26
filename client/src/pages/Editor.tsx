@@ -3,9 +3,11 @@ import { Copy, Moon, FolderGit2, Play, Terminal as TermIcon, FileCode, Users, Pl
 import { gsap } from "gsap";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
-import toast from "react-hot-toast";
 import { initSocket } from "../socket.js"; 
-import { BACKEND_URL as backendUrl } from "../config"; 
+import toast from "react-hot-toast";
+
+const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const backendUrl = import.meta.env.VITE_BACKEND_URL || (isLocalhost ? "http://localhost:8000" : "https://hypercode-18ib.onrender.com");
 
 
 interface LocationState {

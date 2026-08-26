@@ -142,8 +142,8 @@ async function logoutUser(req: Request, res: Response) {
 }
 
 function googleAuthCallback(req: Request, res: Response) { 
-  const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
-  let frontendUrl = (process.env.FRONTEND_URL || (isProduction ? "https://hyper-code.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
+  
+  let frontendUrl = process.env.FRONTEND_URL
 
   if (req.query.state) {
     try {

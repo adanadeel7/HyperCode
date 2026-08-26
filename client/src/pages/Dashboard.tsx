@@ -36,7 +36,8 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-import { BACKEND_URL as backendUrl } from "../config";
+const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const backendUrl = import.meta.env.VITE_BACKEND_URL || (isLocalhost ? "http://localhost:8000" : "https://hypercode-18ib.onrender.com");
 
 function Dashboard() {
   const { user, setUser } = useAuth() as AuthContextType;
@@ -67,10 +68,26 @@ function Dashboard() {
     const fetchRooms = async () => {
       try {
         const token = localStorage.getItem("token");
+        if (!token) {
+          setUser(null);
+          navigate("/");
+          return;
+        }
+
         const response = await fetch(`${backendUrl}/api/rooms`, {
           credentials: "include", 
-          headers: token ? { "Authorization": `Bearer ${token}` } : {}
+          headers: { "Authorization": `Bearer ${token}` }
         });
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+          toast.error("Session expired, please log in.");
+          navigate("/");
+          return;
+        }
+
         const data = (await response.json()) as FetchRoomsResponse;
         if (response.ok && data.success) {
           setRecentRooms(data.rooms);
@@ -84,7 +101,7 @@ function Dashboard() {
       }
     };
     fetchRooms();
-  }, []);
+  }, [navigate, setUser]);
 
   const handleCreateRoom = async () => {
     const generatedId = Math.random().toString(36).substring(2, 9);

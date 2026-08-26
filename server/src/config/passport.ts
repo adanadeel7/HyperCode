@@ -7,11 +7,7 @@ const clientsecret = (process.env.GOOGLE_CLIENT_SECRET || "").trim().replace(/^[
 
 const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 
-const callback = process.env.GOOGLE_CALLBACK_URL || (
-    isProduction 
-        ? "https://hypercode-18ib.onrender.com/api/auth/google/callback" 
-        : "http://localhost:8000/api/auth/google/callback"
-);
+const callback = process.env.GOOGLE_CALLBACK_URL 
 
 passport.use(
     new GoogleStrategy({

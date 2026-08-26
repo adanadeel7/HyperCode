@@ -22,7 +22,8 @@ interface AuthResponse {
   user: User;
 }
 
-import { BACKEND_URL as backendUrl } from "../config";
+const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const backendUrl = import.meta.env.VITE_BACKEND_URL || (isLocalhost ? "http://localhost:8000" : "https://hypercode-18ib.onrender.com");
 
 function Login() {
   const [isRegister, setIsRegister] = useState<boolean>(false);
@@ -52,6 +53,8 @@ function Login() {
 
     if (error) {
       toast.error(`Authentication error: ${error}`);
+      navigate("/", { replace: true });
+      return;
     }
 
     if (token) { 
@@ -59,8 +62,9 @@ function Login() {
       setUser({ name: "Developer", email: "google-user@hypercode.dev" });
       toast.success("Logged in with Google!");
       navigate("/room", { replace: true });
+      return;
     }
-  }, [location, navigate, setUser]);
+  }, [location.search, navigate, setUser]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 interface User { 
     id?: string;
@@ -9,7 +9,7 @@ interface User {
 
 interface AuthContextType { 
    user: User | null;
-   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+   setUser: (value: React.SetStateAction<User | null>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +35,7 @@ function AuthProvider({children} : AuthProviderProps) {
         return null;
     });
 
-    const setPersistedUser: React.Dispatch<React.SetStateAction<User | null>> = (value) => {
+    const setPersistedUser = useCallback((value: React.SetStateAction<User | null>) => {
         setUser((prev) => {
             const next = typeof value === "function" ? value(prev) : value;
             if (next) {
@@ -46,7 +46,7 @@ function AuthProvider({children} : AuthProviderProps) {
             }
             return next;
         });
-    };
+    }, []);
 
     return ( 
         <AuthContext.Provider value={{ user, setUser: setPersistedUser }}>

@@ -12,8 +12,7 @@ router.get('/google', (req, res, next) => {
     passport.authenticate('google', { scope: ['profile', 'email'], state })(req, res, next);
 });
 
-const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
-const defaultFrontendUrl = (process.env.FRONTEND_URL || (isProduction ? "https://hyper-code.vercel.app" : "http://localhost:5173")).replace(/\/$/, "");
+const defaultFrontendUrl = process.env.FRONTEND_URL 
 
 router.get('/google/callback', (req, res, next) => {
     let failureRedirect = `${defaultFrontendUrl}/login`;
