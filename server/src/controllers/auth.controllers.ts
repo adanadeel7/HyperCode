@@ -174,6 +174,12 @@ function googleAuthCallback(req: Request, res: Response) {
       { expiresIn: "7d" }
     );
 
+    const userObj = encodeURIComponent(JSON.stringify({
+      _id : user._id, 
+      name : user.name, 
+      email : user.email 
+    }))
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -181,7 +187,7 @@ function googleAuthCallback(req: Request, res: Response) {
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
   
-    return res.redirect(`${frontendUrl}/?token=${token}`);
+    return res.redirect(`${frontendUrl}/?token=${token}&user=${userObj}`);
   } catch (error) {
     console.error("googleAuthCallback exception:", error);
     return res.redirect(`${frontendUrl}/login?error=oauth_callback_exception`);

@@ -28,10 +28,6 @@ function AuthProvider({children} : AuthProviderProps) {
                 console.error("Failed to parse user from localStorage", e);
             }
         }
-        const token = localStorage.getItem("token");
-        if (token) {
-            return { name: "Developer", email: "google-user@hypercode.dev" };
-        }
         return null;
     });
 

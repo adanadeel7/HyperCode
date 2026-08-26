@@ -46,10 +46,12 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   useEffect(() => { 
     const urlParams = new URLSearchParams(location.search);
     const token = urlParams.get("token");
     const error = urlParams.get("error");
+    const userParams = urlParams.get("user")
 
     if (error) {
       toast.error(`Authentication error: ${error}`);
@@ -58,8 +60,17 @@ function Login() {
     }
 
     if (token) { 
+      let userData = { name: "Developer", email: "" };
+      if (userParams) {
+        try {
+          userData = typeof userParams === "string" ? JSON.parse(decodeURIComponent(userParams)) : userParams;
+        } catch (err) {
+          console.error("Failed to parse user parameters:", err);
+        }
+      }
       localStorage.setItem("token", token);
-      setUser({ name: "Developer", email: "google-user@hypercode.dev" });
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
       toast.success("Logged in with Google!");
       navigate("/room", { replace: true });
       return;
