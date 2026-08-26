@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Room } from "../models/Room.models";
+import { Room } from "../models/Room.models.js";
 
 async function getRooms(req : Request ,res : Response) {
     const userid = req.user?._id;
