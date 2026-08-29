@@ -9,6 +9,7 @@ interface User {
   _id?: string;
   name: string;
   email: string;
+  isTwoFactorEnabled?: boolean;
 }
 
 interface AuthContextType {
@@ -20,6 +21,9 @@ interface AuthResponse {
   message?: string;
   token?: string;
   user: User;
+  twoFactorRequired?: boolean;
+  requiresVerification?: boolean;
+  email?: string;
 }
 
 const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -32,6 +36,11 @@ function Login() {
     email: "",
     password: "",
   });
+
+  const [isTwoFactorStep, setIsTwoFactorStep] = useState<boolean>(false);
+  const [otpCode, setOtpCode] = useState<string>("");
+  const [twoFactorEmail, setTwoFactorEmail] = useState<string>("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false);
 
   const { name, email, password } = formData;
 
@@ -46,12 +55,11 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-
   useEffect(() => { 
     const urlParams = new URLSearchParams(location.search);
     const token = urlParams.get("token");
     const error = urlParams.get("error");
-    const userParams = urlParams.get("user")
+    const userParams = urlParams.get("user");
 
     if (error) {
       toast.error(`Authentication error: ${error}`);
@@ -99,8 +107,19 @@ function Login() {
         return;
       }
 
+      // Check if Two-Factor Authentication is required
+      if (data.twoFactorRequired) {
+        setTwoFactorEmail(email);
+        setIsTwoFactorStep(true);
+        toast.success(data.message || "Security code sent to your email!");
+        return;
+      }
+
       if (data.token) {
         localStorage.setItem("token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
       }
 
       toast.success("Logged in Successfully");
@@ -112,6 +131,52 @@ function Login() {
       } else {
         toast.error("An unexpected error occurred");
       }
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!otpCode || otpCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit code");
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/2fa/verify`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: twoFactorEmail,
+          otp: otpCode.trim(),
+        }),
+      });
+
+      const data = (await response.json()) as AuthResponse;
+
+      if (!response.ok) {
+        toast.error(data.message || "Invalid or expired security code");
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      toast.success("2FA Verified! Welcome back.");
+      setUser(data.user);
+      navigate("/room");
+    } catch (error: unknown) {
+      toast.error("Failed to verify security code");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -140,13 +205,9 @@ function Login() {
         return;
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      toast.success("Account Created");
-      setUser(data.user);
-      navigate("/room");
+      toast.success(data.message || "Registration successful! Please check your email to verify your account.");
+      setIsRegister(false);
+      setFormData({ name: "", email, password: "" });
     } catch (error: unknown) { 
       if (error instanceof Error) {
         toast.error(error.message);
@@ -207,105 +268,158 @@ function Login() {
           </div>
 
           <div className="bg-[#171f31]/60 backdrop-blur-md border border-[#3a494a]/50 p-8 rounded-xl shadow-xl">
-            <div className="flex flex-col items-start w-full pb-6">
-              <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
-                {isRegister ? "Register" : "Login"}
-              </h1>
-            </div>
-
-            <form onSubmit={isRegister ? handleRegister : onSubmit} className="space-y-6">
-              {isRegister && (
-                <div className="flex flex-col items-start w-full">
-                  <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
-                    NAME
-                  </h3>
-                  <input
-                    placeholder="Enter your name"
-                    type="text"
-                    name="name"
-                    className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
-                    onChange={onChange}
-                    value={name}
-                    required
-                  />
+            
+            {/* 2FA OTP Step */}
+            {isTwoFactorStep ? (
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
+                    Two-Factor Verification
+                  </h1>
+                  <p className="font-body text-[13px] text-[#808e93]">
+                    We sent a 6-digit security code to <span className="text-[#00dce5]">{twoFactorEmail}</span>
+                  </p>
                 </div>
-              )}
 
-              <div className="flex flex-col items-start w-full">
-                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
-                  EMAIL
-                </h3>
-                <input
-                  placeholder="developer@example.com"
-                  type="email"
-                  name="email"
-                  className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
-                  onChange={onChange}
-                  value={email}
-                  required
-                />
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="••••••"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                      className="w-full text-center tracking-[8px] text-2xl font-bold py-3 bg-white/5 border border-[#3a494a] rounded text-[#63f7ff] font-editor focus:outline-none focus:border-[#00dce5]"
+                      autoFocus
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isVerifyingOtp}
+                    className="bg-[#00dce5] hover:bg-[#63f7ff] text-[#003739] w-full py-3 uppercase rounded font-label text-[12px] font-extrabold tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isVerifyingOtp ? "Verifying..." : "Verify & Sign In"}
+                  </button>
+                </form>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTwoFactorStep(false);
+                      setOtpCode("");
+                    }}
+                    className="text-xs text-[#808e93] hover:text-[#cbdfe2] transition-colors"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
               </div>
+            ) : (
+              /* Regular Login / Register Form */
+              <>
+                <div className="flex flex-col items-start w-full pb-6">
+                  <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
+                    {isRegister ? "Register" : "Login"}
+                  </h1>
+                </div>
 
-              <div className="flex flex-col items-start w-full">
-                <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
-                  PASSWORD
-                </h3>
-                <input
-                  placeholder="••••••••"
-                  type="password"
-                  name="password"
-                  className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
-                  onChange={onChange}
-                  value={password}
-                  required
-                />
-              </div>
+                <form onSubmit={isRegister ? handleRegister : onSubmit} className="space-y-6">
+                  {isRegister && (
+                    <div className="flex flex-col items-start w-full">
+                      <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                        NAME
+                      </h3>
+                      <input
+                        placeholder="Enter your name"
+                        type="text"
+                        name="name"
+                        className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                        onChange={onChange}
+                        value={name}
+                        required
+                      />
+                    </div>
+                  )}
 
-              <div className="pt-4 text-center">
+                  <div className="flex flex-col items-start w-full">
+                    <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                      EMAIL
+                    </h3>
+                    <input
+                      placeholder="developer@example.com"
+                      type="email"
+                      name="email"
+                      className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                      onChange={onChange}
+                      value={email}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-start w-full">
+                    <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                      PASSWORD
+                    </h3>
+                    <input
+                      placeholder="••••••••"
+                      type="password"
+                      name="password"
+                      className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                      onChange={onChange}
+                      value={password}
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-4 text-center">
+                    <button
+                      type="submit"
+                      className="bg-[#00dce5] hover:bg-[#63f7ff] text-[#003739] w-full py-3 uppercase rounded font-label text-[12px] font-extrabold tracking-wider transition-all cursor-pointer"
+                    >
+                      {isRegister ? "Register" : "Login"}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="my-6 flex items-center">
+                  <div className="flex-grow border-t border-[#3a494a]/50"></div>
+                  <span className="px-3 text-[12px] font-editor text-[#808e93]">OR</span>
+                  <div className="flex-grow border-t border-[#3a494a]/50"></div>
+                </div>
+
                 <button
-                  type="submit"
-                  className="bg-[#00dce5] hover:bg-[#63f7ff] text-[#003739] w-full py-3 uppercase rounded font-label text-[12px] font-extrabold tracking-wider transition-all cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    const origin = encodeURIComponent(window.location.origin);
+                    window.location.href = `${backendUrl}/api/auth/google?origin=${origin}`;
+                  }}
+                  className="flex items-center justify-center w-full bg-white/5 hover:bg-white/10 border border-[#3a494a]/50 text-[#cbdfe2] py-2.5 rounded transition-all cursor-pointer font-editor text-[14px]"
                 >
-                  {isRegister ? "Register" : "Login"}
+                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Sign in with Google
                 </button>
-              </div>
-            </form>
 
-            <div className="my-6 flex items-center">
-              <div className="flex-grow border-t border-[#3a494a]/50"></div>
-              <span className="px-3 text-[12px] font-editor text-[#808e93]">OR</span>
-              <div className="flex-grow border-t border-[#3a494a]/50"></div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const origin = encodeURIComponent(window.location.origin);
-                window.location.href = `${backendUrl}/api/auth/google?origin=${origin}`;
-              }}
-              className="flex items-center justify-center w-full bg-white/5 hover:bg-white/10 border border-[#3a494a]/50 text-[#cbdfe2] py-2.5 rounded transition-all cursor-pointer font-editor text-[14px]"
-            >
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Sign in with Google
-            </button>
-
-            <div className="flex justify-center font-body text-[14px] pt-6 border-t border-[#3a494a]/30 mt-6">
-              <h1 className="text-[#b3c4c4]">
-                {isRegister ? "Already have an account?" : "New User?"}
-              </h1>
-              <button
-                type="button"
-                className="text-[#5eecf4] px-2 font-bold cursor-pointer hover:underline"
-                onClick={() => setIsRegister(!isRegister)}
-              >
-                {isRegister ? "Login" : "Register"}
-              </button>
-            </div>
+                <div className="flex justify-center font-body text-[14px] pt-6 border-t border-[#3a494a]/30 mt-6">
+                  <h1 className="text-[#b3c4c4]">
+                    {isRegister ? "Already have an account?" : "New User?"}
+                  </h1>
+                  <button
+                    type="button"
+                    className="text-[#5eecf4] px-2 font-bold cursor-pointer hover:underline"
+                    onClick={() => setIsRegister(!isRegister)}
+                  >
+                    {isRegister ? "Login" : "Register"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

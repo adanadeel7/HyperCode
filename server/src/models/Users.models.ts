@@ -8,6 +8,17 @@ export interface UserDocument extends Document{
     email: string;
     password?: string;
     googleId ?: string; 
+
+    //Email Verification 
+    isEmailVerified : boolean; 
+    emailVerificationToken ?: string | undefined;
+    emailVerificationExpires?: Date  | undefined ; 
+
+    //2FA (Email OTP)
+      isTwoFactorEnabled: boolean;
+    twoFactorOtp?: string | undefined;
+        twoFactorOtpExpires?: Date | undefined;
+
 }
 
 const userSchema = new mongoose.Schema<UserDocument>( { 
@@ -33,7 +44,33 @@ const userSchema = new mongoose.Schema<UserDocument>( {
         type: String, 
         unique : true,
         sparse : true
-    }
+    }, 
+    
+    isEmailVerified : { 
+        type : Boolean,
+        default : false
+    }, 
+
+    emailVerificationToken : { 
+        type: String,
+    },
+    
+    emailVerificationExpires : { 
+        type: Date,
+    },
+
+    isTwoFactorEnabled : { 
+        type : Boolean,
+        default : false
+    }, 
+
+    twoFactorOtp : { 
+        type: String,
+    },
+    
+    twoFactorOtpExpires : { 
+        type: Date,
+    },
 
 
 

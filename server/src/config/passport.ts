@@ -35,7 +35,8 @@ passport.use(
                 user = await User.create({
                     name: profile.displayName || (profile.name ? `${profile.name.givenName || ""} ${profile.name.familyName || ""}`.trim() : "") || email.split("@")[0] || "User", 
                     email: email, 
-                    googleId: profile.id
+                    googleId: profile.id,
+                    isEmailVerified : true, 
                 });
             }
 

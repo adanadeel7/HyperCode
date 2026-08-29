@@ -4,9 +4,9 @@ import Editor from './pages/Editor.tsx'
 import Login from './pages/Login.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
 import Dashboard from './pages/Dashboard.tsx'
-
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './context/authContext.tsx'
+import VerifyEmail from './pages/VerifyEmail.tsx'
 
 function App() {
   
@@ -19,6 +19,7 @@ function App() {
         <Routes>
               <Route path='/' element={<Login/>}/>
               <Route path='/signup' element={<Login/>}/>
+              <Route path='/verify-email' element={<VerifyEmail/>}/>
               <Route path='/room' 
               element={
               <ProtectedRoute user={user}>
