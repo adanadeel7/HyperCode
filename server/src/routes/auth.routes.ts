@@ -8,7 +8,8 @@ import {
   logoutUser, 
   googleAuthCallback,
   verifyTwoFactorOTP,
-  toggleTwoFactor
+  toggleTwoFactor,
+  getCurrentUser
 } from "../controllers/auth.controllers.js";
 import { protect } from "../middleware/auth.middleware.js";
 import passport from "passport";
@@ -42,9 +43,9 @@ router.get('/google/callback', (req, res, next) => {
 
 router.get("/verify-email", verifyEmail);
 router.post("/send-verification", protect, sendMyVerificationEmail);
-router.post("/send_verification", protect, sendMyVerificationEmail);
 router.post("/resend-verification", resendVerificationEmail);
 router.post("/2fa/verify", verifyTwoFactorOTP);
 router.post("/2fa/toggle", protect, toggleTwoFactor);
+router.get("/me", protect, getCurrentUser)
 
 export default router;

@@ -329,13 +329,11 @@ function Editor() {
     setTerminalLogs((prev) => [...prev, `[Running]: Executing compiler engine for ${activeFile}...`]);
     
     try {
-      const token = localStorage.getItem("token");
-
       const response = await fetch(`${backendUrl}/api/execute`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ code, filename: activeFile }),
       });

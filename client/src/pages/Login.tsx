@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/authContext";
+import axios from 'axios';
 
 
 interface User {
@@ -55,11 +56,10 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => { 
+   useEffect(() => { 
     const urlParams = new URLSearchParams(location.search);
-    const token = urlParams.get("token");
+    const login = urlParams.get("login");
     const error = urlParams.get("error");
-    const userParams = urlParams.get("user");
 
     if (error) {
       toast.error(`Authentication error: ${error}`);
@@ -67,22 +67,32 @@ function Login() {
       return;
     }
 
-    if (token) { 
-      let userData = { name: "Developer", email: "" };
-      if (userParams) {
+    if (login === "google") {
+      (async () => {
         try {
-          userData = typeof userParams === "string" ? JSON.parse(decodeURIComponent(userParams)) : userParams;
+          const response = await axios.get(`${backendUrl}/api/auth/me`, {
+            withCredentials : true
+          })
+
+          const userData = response.data.user
+
+          if(!userData) {
+            throw Error("Invalid User")
+          }
+
+          setUser(userData)
+          toast.success("Logged in with Google!")
+          navigate("/room", { replace : true})
         } catch (err) {
-          console.error("Failed to parse user parameters:", err);
+          console.error("failed to fetch current user after google login:", err)
+          toast.error("Failed to complete Google sign-in")
+          navigate("/",{replace : true})
         }
-      }
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      toast.success("Logged in with Google!");
-      navigate("/room", { replace: true });
-      return;
+      })();
     }
+      
+      return;
+    
   }, [location.search, navigate, setUser]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -115,9 +125,6 @@ function Login() {
         return;
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
@@ -132,7 +139,7 @@ function Login() {
         toast.error("An unexpected error occurred");
       }
     }
-  };
+   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,9 +170,6 @@ function Login() {
         return;
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }

@@ -14,6 +14,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import PasswordConfirmModal from "../components/PasswordConfirmModal";
 
 // --- Interfaces ---
 
@@ -86,16 +87,8 @@ function Dashboard() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setUser(null);
-          navigate("/");
-          return;
-        }
-
         const response = await fetch(`${backendUrl}/api/rooms`, {
           credentials: "include",
-          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.status === 401) {
@@ -131,13 +124,11 @@ function Dashboard() {
     if (roomName === null) return;
 
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${backendUrl}/api/rooms`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ roomId: generatedId, name: roomName }),
       });
@@ -177,11 +168,9 @@ function Dashboard() {
       )
     ) {
       try {
-        const token = localStorage.getItem("token");
         const response = await fetch(`${backendUrl}/api/rooms/${roomId}`, {
           method: "DELETE",
           credentials: "include",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         const data = (await response.json()) as ApiResponse;
 
@@ -199,11 +188,9 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("token");
       await fetch(`${backendUrl}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setUser(null);
       localStorage.removeItem("token");
@@ -216,58 +203,64 @@ function Dashboard() {
   };
 
   const [isToggling2FA, setIsToggling2FA] = useState<boolean>(false);
-
+  const [show2FAModal, setShow2FAModal] = useState<boolean>(false)
   const handleToggle2FA = async () => {
     if (!user?.isEmailVerified) {
       toast.error("Please verify your email address before enabling 2FA.");
       return;
     }
 
-    setIsToggling2FA(true);
+    setShow2FAModal(true)
+  };
+
+  const confirmToggle2FA = async (password : string) => { 
+    setIsToggling2FA(true)
+
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${backendUrl}/api/auth/2fa/toggle`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const res = await fetch (`${backendUrl}/api/auth/2fa/toggle`, {
+        method : "POST",
+        credentials : "include",
+        headers : {
+          "Content-Type" : "application/json",
         },
+        body : JSON.stringify({password}),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setUser((prev) => {
-          if (!prev) return null;
-          const updated = {
-            ...prev,
-            isTwoFactorEnabled: data.isTwoFactorEnabled,
-          };
-          localStorage.setItem("user", JSON.stringify(updated));
-          return updated;
-        });
-        toast.success(data.message || "2FA setting updated");
+
+      const data = await res.json()
+      if (res.ok && data.success) { 
+        setUser((prev) : any => {
+          if (!prev) return null
+          const updated = { 
+            ...prev, 
+            isTwoFactorEnabled : data.isTwoFactorEnabled
+          }; 
+
+          localStorage.setItem("user", JSON.stringify(updated))
+          return updated
+        })
+
+        toast.success(data.message|| "2FA setting updated")
+        setShow2FAModal(false)
       } else {
         toast.error(data.message || "Failed to update 2FA setting");
       }
-    } catch (err) {
+    } catch(error) {
       toast.error("Error connecting to server");
-    } finally {
+    } finally { 
       setIsToggling2FA(false);
     }
-  };
+  }
 
   const [isSendingVerification, setIsSendingVerification] = useState<boolean>(false);
 
   const handleSendVerification = async () => {
     setIsSendingVerification(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${backendUrl}/api/auth/send-verification`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
       const data = await res.json();
@@ -310,30 +303,6 @@ function Dashboard() {
           ref={containerRef}
           className="max-w-6xl mx-auto px-6 py-12 relative z-20"
         >
-          {/* Email Verification Warning Banner */}
-          {user && user.isEmailVerified === false && (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="text-amber-400 text-lg">⚠️</span>
-                <div>
-                  <p className="text-sm font-semibold text-amber-200">
-                    Your email address is not verified
-                  </p>
-                  <p className="text-xs text-amber-300/70">
-                    Please verify your email to secure your account and unlock features like 2FA.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleSendVerification}
-                disabled={isSendingVerification}
-                className="px-4 py-2 bg-amber-500 text-[#0b1324] font-bold rounded-lg text-xs hover:bg-amber-400 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
-              >
-                {isSendingVerification ? "Sending..." : "Send Verification Email"}
-              </button>
-            </div>
-          )}
-
           {/* Header */}
           <header className="flex justify-between items-center border-b border-[#3a494a]/40 pb-8 mb-12">
             <div className="flex items-center gap-3">
@@ -551,6 +520,8 @@ function Dashboard() {
                           <ArrowRight className="w-4 h-4 text-[#808e93] group-hover:text-[#00dce5] group-hover:translate-x-1 transition-all" />
                         </div>
                       </div>
+
+                      
                     ))
                   )}
                 </div>
@@ -559,6 +530,14 @@ function Dashboard() {
           </main>
         </div>
       </div>
+      {show2FAModal && (
+        <PasswordConfirmModal
+          title={user?.isTwoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
+          isSubmitting={isToggling2FA}
+          onConfirm={confirmToggle2FA}
+          onCancel={() => setShow2FAModal(false)}
+        />
+      )}
     </>
   );
 }

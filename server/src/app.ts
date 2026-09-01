@@ -13,17 +13,13 @@ app.set("trust proxy", 1);
 
 app.use(cors({
     origin: (origin, callback) => {
-        const allowedOrigins = [
-            "http://localhost:5173",
-            "https://hyper-code-bnkar1hrn-adan21.vercel.app",
-            process.env.FRONTEND_URL
-        ].filter(Boolean);
+        const allowedOrigins = [process.env.FRONTEND_URL];
 
         if (!origin) {
             return callback(null, true);
         }
 
-        const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.includes("localhost");
+        const isAllowed = allowedOrigins.includes(origin)
 
         if (isAllowed) {
             callback(null, true);

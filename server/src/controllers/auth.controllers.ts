@@ -4,7 +4,7 @@ import { UserDocument, User } from "../models/Users.models.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
-import { error } from "node:console";
+import { error, log } from "node:console";
 import crypto from "crypto";
 import {
   sendVerificationEmail,
@@ -383,6 +383,7 @@ async function verifyTwoFactorOTP(req: Request, res: Response) {
         _id: user._id,
         email: user.email,
         name: user.name,
+        isEmailVerified: user.isEmailVerified,
         isTwoFactorEnabled: user.isTwoFactorEnabled,
       },
     });
@@ -396,7 +397,6 @@ async function verifyTwoFactorOTP(req: Request, res: Response) {
 async function toggleTwoFactor(req: Request, res: Response) {
   try {
     const userId = req.user?._id;
-    const Userpassword = req.user?.password;
 
     const { password } = req.body;
 
@@ -413,22 +413,17 @@ async function toggleTwoFactor(req: Request, res: Response) {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    const users = await User.findById(userId);
-
     
-    if (!users ) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  
 
-    const UsersPassword = users.password
+    const UserPassword = user.password
 
-    if (!UsersPassword ) {
+    if (!UserPassword ) {
       throw Error("User Password no correct");
     }
 
     
-    const isMatch = await bcrypt.compare(password, UsersPassword);
+    const isMatch = await bcrypt.compare(password, UserPassword);
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
@@ -449,6 +444,26 @@ async function toggleTwoFactor(req: Request, res: Response) {
     return res.status(500).json({ message });
   }
 }
+
+async function getCurrentUser(req : Request, res : Response) {
+  const user = req.user
+
+  if (!user) {
+    return res.status(401).json({message : "User not found"})
+  }
+
+  return res.status(200).json({
+    success : true,
+    user : {
+      _id : user._id,
+      name : user.name,
+      email : user.email,
+    isEmailVerified : user.isEmailVerified,
+    isTwoFactorEnabled : user.isTwoFactorEnabled
+    }
+  })
+}
+
 
 function googleAuthCallback(req: Request, res: Response) {
   let frontendUrl = process.env.FRONTEND_URL;
@@ -482,14 +497,6 @@ function googleAuthCallback(req: Request, res: Response) {
 
     const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "7d" });
 
-    const userObj = encodeURIComponent(
-      JSON.stringify({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-      }),
-    );
-
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -499,7 +506,7 @@ function googleAuthCallback(req: Request, res: Response) {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.redirect(`${frontendUrl}/?token=${token}&user=${userObj}`);
+    return res.redirect(`${frontendUrl}/?login=google`);
   } catch (error) {
     console.error("googleAuthCallback exception:", error);
     return res.redirect(`${frontendUrl}/login?error=oauth_callback_exception`);
@@ -516,4 +523,5 @@ export {
   verifyTwoFactorOTP,
   toggleTwoFactor,
   sendMyVerificationEmail,
+  getCurrentUser
 };
