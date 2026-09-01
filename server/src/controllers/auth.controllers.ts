@@ -325,6 +325,7 @@ async function loginUser(req: Request, res: Response) {
         name: user.name,
         isEmailVerified: user.isEmailVerified,
         isTwoFactorEnabled: user.isTwoFactorEnabled,
+        editorSettings: user.editorSettings,
       },
     });
   } catch (error) {
@@ -385,6 +386,7 @@ async function verifyTwoFactorOTP(req: Request, res: Response) {
         name: user.name,
         isEmailVerified: user.isEmailVerified,
         isTwoFactorEnabled: user.isTwoFactorEnabled,
+        editorSettings: user.editorSettings,
       },
     });
   } catch (error) {
@@ -459,7 +461,8 @@ async function getCurrentUser(req : Request, res : Response) {
       name : user.name,
       email : user.email,
     isEmailVerified : user.isEmailVerified,
-    isTwoFactorEnabled : user.isTwoFactorEnabled
+    isTwoFactorEnabled : user.isTwoFactorEnabled,
+    editorSettings : user.editorSettings
     }
   })
 }
@@ -513,6 +516,39 @@ function googleAuthCallback(req: Request, res: Response) {
   }
 }
 
+async function updateEditorSettings(req: Request, res: Response) {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { theme, fontSize, wordWrap, minimap } = req.body;
+
+    if (theme !== undefined) user.editorSettings.theme = theme;
+    if (fontSize !== undefined) user.editorSettings.fontSize = fontSize;
+    if (wordWrap !== undefined) user.editorSettings.wordWrap = wordWrap;
+    if (minimap !== undefined) user.editorSettings.minimap = minimap;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      editorSettings: user.editorSettings,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to update editor settings";
+    return res.status(500).json({ message });
+  }
+}
+
 export {
   registerUser,
   loginUser,
@@ -523,5 +559,6 @@ export {
   verifyTwoFactorOTP,
   toggleTwoFactor,
   sendMyVerificationEmail,
-  getCurrentUser
+  getCurrentUser,
+  updateEditorSettings
 };

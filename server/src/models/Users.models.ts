@@ -19,6 +19,14 @@ export interface UserDocument extends Document{
     twoFactorOtp?: string | undefined;
         twoFactorOtpExpires?: Date | undefined;
 
+    //Editor Settings
+    editorSettings: {
+        theme: string;
+        fontSize: number;
+        wordWrap: boolean;
+        minimap: boolean;
+    };
+
 }
 
 const userSchema = new mongoose.Schema<UserDocument>( { 
@@ -72,9 +80,26 @@ const userSchema = new mongoose.Schema<UserDocument>( {
         type: Date,
     },
 
+    editorSettings: {
+        theme: {
+            type: String,
+            default: "vs-dark"
+        },
+        fontSize: {
+            type: Number,
+            default: 13
+        },
+        wordWrap: {
+            type: Boolean,
+            default: true
+        },
+        minimap: {
+            type: Boolean,
+            default: false
+        }
+    }
 
-
-}, { 
+}, {
     timestamps: true
 })
 
