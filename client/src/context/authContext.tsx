@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 
 interface User { 
     id?: string;
@@ -6,6 +6,12 @@ interface User {
     name: string;
     email: string; 
     isTwoFactorEnabled?: boolean;
+    editorSettings ?: { 
+         theme: string;
+        fontSize: number;
+        wordWrap: boolean;
+        minimap: boolean;
+    } 
 }
 
 interface AuthContextType { 
@@ -45,7 +51,12 @@ function AuthProvider({children} : AuthProviderProps) {
         });
     }, []);
 
-    return ( 
+    useEffect(() => {
+        const isLight = user?.editorSettings?.theme === "light";
+        document.documentElement.classList.toggle("dark", !isLight);
+    }, [user?.editorSettings?.theme]);
+
+    return (
         <AuthContext.Provider value={{ user, setUser: setPersistedUser }}>
             {children}
         </AuthContext.Provider>

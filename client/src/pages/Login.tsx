@@ -11,6 +11,12 @@ interface User {
   name: string;
   email: string;
   isTwoFactorEnabled?: boolean;
+  editorSettings ?: { 
+         theme: string;
+        fontSize: number;
+        wordWrap: boolean;
+        minimap: boolean;
+    } 
 }
 
 interface AuthContextType {
@@ -253,35 +259,35 @@ function Login() {
       />
 
       <div
-        className="w-full min-h-screen bg-[#0b1324] relative overflow-hidden z-0 flex flex-col justify-center"
+        className="w-full min-h-screen bg-white dark:bg-[#0b1324] relative overflow-hidden z-0 flex flex-col justify-center"
         style={{
           backgroundSize: "40px 40px",
           backgroundImage: `
-            linear-gradient(to right, rgba(0, 220, 229, 0.04) 1px, transparent 1px), 
+            linear-gradient(to right, rgba(0, 220, 229, 0.04) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(0, 220, 229, 0.04) 1px, transparent 1px)`,
         }}
       >
         <div className="relative z-20 w-full max-w-md mx-auto py-12 px-6">
           <div className="text-center pb-8">
-            <h1 className="font-headline text-[32px] font-bold text-[#cbdfe2]">
+            <h1 className="font-headline text-[32px] font-bold text-slate-900 dark:text-[#cbdfe2]">
               HyperCode
             </h1>
-            <h2 className="font-body text-[14px] text-[#808e93]">
+            <h2 className="font-body text-[14px] text-slate-500 dark:text-[#808e93]">
               Collaborative engineering space
             </h2>
           </div>
 
-          <div className="bg-[#171f31]/60 backdrop-blur-md border border-[#3a494a]/50 p-8 rounded-xl shadow-xl">
-            
+          <div className="bg-slate-50/80 dark:bg-[#171f31]/60 backdrop-blur-md border border-slate-200 dark:border-[#3a494a]/50 p-8 rounded-xl shadow-xl">
+
             {/* 2FA OTP Step */}
             {isTwoFactorStep ? (
               <div className="space-y-6">
                 <div className="text-center space-y-2">
-                  <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
+                  <h1 className="font-headline text-slate-900 dark:text-[#dae2fb] text-[20px] font-bold">
                     Two-Factor Verification
                   </h1>
-                  <p className="font-body text-[13px] text-[#808e93]">
-                    We sent a 6-digit security code to <span className="text-[#00dce5]">{twoFactorEmail}</span>
+                  <p className="font-body text-[13px] text-slate-500 dark:text-[#808e93]">
+                    We sent a 6-digit security code to <span className="text-cyan-600 dark:text-[#00dce5]">{twoFactorEmail}</span>
                   </p>
                 </div>
 
@@ -293,7 +299,7 @@ function Login() {
                       placeholder="••••••"
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                      className="w-full text-center tracking-[8px] text-2xl font-bold py-3 bg-white/5 border border-[#3a494a] rounded text-[#63f7ff] font-editor focus:outline-none focus:border-[#00dce5]"
+                      className="w-full text-center tracking-[8px] text-2xl font-bold py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-[#3a494a] rounded text-cyan-600 dark:text-[#63f7ff] font-editor focus:outline-none focus:border-cyan-500 dark:focus:border-[#00dce5]"
                       autoFocus
                     />
                   </div>
@@ -314,7 +320,7 @@ function Login() {
                       setIsTwoFactorStep(false);
                       setOtpCode("");
                     }}
-                    className="text-xs text-[#808e93] hover:text-[#cbdfe2] transition-colors"
+                    className="text-xs text-slate-500 dark:text-[#808e93] hover:text-slate-900 dark:hover:text-[#cbdfe2] transition-colors"
                   >
                     ← Back to Login
                   </button>
@@ -324,7 +330,7 @@ function Login() {
               /* Regular Login / Register Form */
               <>
                 <div className="flex flex-col items-start w-full pb-6">
-                  <h1 className="font-headline text-[#dae2fb] text-[20px] font-bold">
+                  <h1 className="font-headline text-slate-900 dark:text-[#dae2fb] text-[20px] font-bold">
                     {isRegister ? "Register" : "Login"}
                   </h1>
                 </div>
@@ -332,14 +338,14 @@ function Login() {
                 <form onSubmit={isRegister ? handleRegister : onSubmit} className="space-y-6">
                   {isRegister && (
                     <div className="flex flex-col items-start w-full">
-                      <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                      <h3 className="font-editor text-cyan-600 dark:text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
                         NAME
                       </h3>
                       <input
                         placeholder="Enter your name"
                         type="text"
                         name="name"
-                        className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                        className="bg-slate-100 dark:bg-white/5 text-[15px] text-slate-900 dark:text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-slate-200 dark:border-[#3a494a] font-editor focus:outline-none focus:border-cyan-500 dark:focus:border-[#00dce5]"
                         onChange={onChange}
                         value={name}
                         required
@@ -348,14 +354,14 @@ function Login() {
                   )}
 
                   <div className="flex flex-col items-start w-full">
-                    <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                    <h3 className="font-editor text-cyan-600 dark:text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
                       EMAIL
                     </h3>
                     <input
                       placeholder="developer@example.com"
                       type="email"
                       name="email"
-                      className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                      className="bg-slate-100 dark:bg-white/5 text-[15px] text-slate-900 dark:text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-slate-200 dark:border-[#3a494a] font-editor focus:outline-none focus:border-cyan-500 dark:focus:border-[#00dce5]"
                       onChange={onChange}
                       value={email}
                       required
@@ -363,14 +369,14 @@ function Login() {
                   </div>
 
                   <div className="flex flex-col items-start w-full">
-                    <h3 className="font-editor text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
+                    <h3 className="font-editor text-cyan-600 dark:text-[#01c8d2] text-[12px] pb-2 uppercase tracking-wider">
                       PASSWORD
                     </h3>
                     <input
                       placeholder="••••••••"
                       type="password"
                       name="password"
-                      className="bg-white/5 text-[15px] text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-[#3a494a] font-editor focus:outline-none focus:border-[#00dce5]"
+                      className="bg-slate-100 dark:bg-white/5 text-[15px] text-slate-900 dark:text-[#cbdfe2] px-3 py-2.5 w-full rounded border border-slate-200 dark:border-[#3a494a] font-editor focus:outline-none focus:border-cyan-500 dark:focus:border-[#00dce5]"
                       onChange={onChange}
                       value={password}
                       required
@@ -388,9 +394,9 @@ function Login() {
                 </form>
 
                 <div className="my-6 flex items-center">
-                  <div className="flex-grow border-t border-[#3a494a]/50"></div>
-                  <span className="px-3 text-[12px] font-editor text-[#808e93]">OR</span>
-                  <div className="flex-grow border-t border-[#3a494a]/50"></div>
+                  <div className="flex-grow border-t border-slate-200 dark:border-[#3a494a]/50"></div>
+                  <span className="px-3 text-[12px] font-editor text-slate-500 dark:text-[#808e93]">OR</span>
+                  <div className="flex-grow border-t border-slate-200 dark:border-[#3a494a]/50"></div>
                 </div>
 
                 <button
@@ -399,7 +405,7 @@ function Login() {
                     const origin = encodeURIComponent(window.location.origin);
                     window.location.href = `${backendUrl}/api/auth/google?origin=${origin}`;
                   }}
-                  className="flex items-center justify-center w-full bg-white/5 hover:bg-white/10 border border-[#3a494a]/50 text-[#cbdfe2] py-2.5 rounded transition-all cursor-pointer font-editor text-[14px]"
+                  className="flex items-center justify-center w-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-[#3a494a]/50 text-slate-900 dark:text-[#cbdfe2] py-2.5 rounded transition-all cursor-pointer font-editor text-[14px]"
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -410,13 +416,13 @@ function Login() {
                   Sign in with Google
                 </button>
 
-                <div className="flex justify-center font-body text-[14px] pt-6 border-t border-[#3a494a]/30 mt-6">
-                  <h1 className="text-[#b3c4c4]">
+                <div className="flex justify-center font-body text-[14px] pt-6 border-t border-slate-200 dark:border-[#3a494a]/30 mt-6">
+                  <h1 className="text-slate-500 dark:text-[#b3c4c4]">
                     {isRegister ? "Already have an account?" : "New User?"}
                   </h1>
                   <button
                     type="button"
-                    className="text-[#5eecf4] px-2 font-bold cursor-pointer hover:underline"
+                    className="text-cyan-600 dark:text-[#5eecf4] px-2 font-bold cursor-pointer hover:underline"
                     onClick={() => setIsRegister(!isRegister)}
                   >
                     {isRegister ? "Login" : "Register"}

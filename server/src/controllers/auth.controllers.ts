@@ -82,7 +82,6 @@ async function registerUser(req: Request, res: Response) {
         frontendUrl,
       );
     } catch (emailError) {
-      // Rollback user document if sending verification email fails
       await User.deleteOne({ _id: user._id });
       console.error("Email sending failure during registration:", emailError);
       const emailErrMsg =

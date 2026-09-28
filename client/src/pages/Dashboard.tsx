@@ -16,7 +16,6 @@ import {
 import toast from "react-hot-toast";
 import PasswordConfirmModal from "../components/PasswordConfirmModal";
 
-// --- Interfaces ---
 
 interface ApiResponse {
   success: boolean;
@@ -42,6 +41,12 @@ interface User {
   email: string;
   isEmailVerified: boolean;
   isTwoFactorEnabled?: boolean;
+  editorSettings ?: { 
+         theme: string;
+        fontSize: number;
+        wordWrap: boolean;
+        minimap: boolean;
+    } 
 }
 
 interface AuthContextType {
@@ -291,11 +296,11 @@ function Dashboard() {
       />
 
       <div
-        className="w-full min-h-screen bg-[#0b1324] text-[#dae2fb] font-sans antialiased relative overflow-hidden z-0"
+        className="w-full min-h-screen bg-white text-slate-900 dark:bg-[#0b1324] dark:text-[#dae2fb] font-sans antialiased relative overflow-hidden z-0"
         style={{
           backgroundSize: "40px 40px",
           backgroundImage: `
-            linear-gradient(to right, rgba(0, 220, 229, 0.03) 1px, transparent 1px), 
+            linear-gradient(to right, rgba(0, 220, 229, 0.03) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(0, 220, 229, 0.03) 1px, transparent 1px)`,
         }}
       >
@@ -304,29 +309,29 @@ function Dashboard() {
           className="max-w-6xl mx-auto px-6 py-12 relative z-20"
         >
           {/* Header */}
-          <header className="flex justify-between items-center border-b border-[#3a494a]/40 pb-8 mb-12">
+          <header className="flex justify-between items-center border-b border-slate-200 dark:border-[#3a494a]/40 pb-8 mb-12">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#00dce5]/10 border border-[#00dce5]/30 flex items-center justify-center text-[#00dce5]">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 dark:bg-[#00dce5]/10 border border-cyan-500/30 dark:border-[#00dce5]/30 flex items-center justify-center text-cyan-600 dark:text-[#00dce5]">
                 <Code className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-[#cbdfe2]">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[#cbdfe2]">
                   HyperCode
                 </h1>
-                <p className="text-xs text-[#808e93]">Workspace Dashboard</p>
+                <p className="text-xs text-slate-500 dark:text-[#808e93]">Workspace Dashboard</p>
               </div>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#dae2fb]">
+                <p className="text-sm font-semibold text-slate-900 dark:text-[#dae2fb]">
                   {user?.name}
                 </p>
-                <p className="text-xs text-[#808e93]">{user?.email}</p>
+                <p className="text-xs text-slate-500 dark:text-[#808e93]">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400 text-xs font-semibold hover:bg-red-500 hover:text-white transition-all cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 Logout
@@ -337,12 +342,12 @@ function Dashboard() {
           {user && !user.isEmailVerified && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="text-amber-400 text-lg">⚠️</span>
+                <span className="text-amber-500 dark:text-amber-400 text-lg">⚠️</span>
                 <div>
-                  <p className="text-sm font-semibold text-amber-200">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                     Your email address is not verified
                   </p>
-                  <p className="text-xs text-amber-300/70">
+                  <p className="text-xs text-amber-700/80 dark:text-amber-300/70">
                     Please verify your email to secure your account and enable
                     features like 2FA.
                   </p>
@@ -363,8 +368,8 @@ function Dashboard() {
           <main className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Quick Actions Card */}
             <section className="md:col-span-1 space-y-6">
-              <div className="bg-[#171f31]/60 backdrop-blur-md border border-[#3a494a]/50 p-6 rounded-xl space-y-6">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-[#01c8d2]">
+              <div className="bg-slate-50/80 dark:bg-[#171f31]/60 backdrop-blur-md border border-slate-200 dark:border-[#3a494a]/50 p-6 rounded-xl space-y-6">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-cyan-600 dark:text-[#01c8d2]">
                   Quick Actions
                 </h2>
 
@@ -379,11 +384,11 @@ function Dashboard() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
 
-                <div className="border-t border-[#3a494a]/30 my-4" />
+                <div className="border-t border-slate-200 dark:border-[#3a494a]/30 my-4" />
 
                 {/* Join Room Form */}
                 <form onSubmit={handleJoinRoom} className="space-y-3">
-                  <label className="block text-xs font-semibold text-[#808e93]">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-[#808e93]">
                     JOIN EXISTING WORKSPACE
                   </label>
                   <div className="flex gap-2">
@@ -392,30 +397,30 @@ function Dashboard() {
                       placeholder="Enter Room ID"
                       value={roomIdInput}
                       onChange={(e) => setRoomIdInput(e.target.value)}
-                      className="flex-1 bg-[#0b1324] text-sm text-[#cbdfe2] px-3 py-2.5 rounded border border-[#3a494a] font-mono focus:outline-none focus:border-[#00dce5]"
+                      className="flex-1 bg-white dark:bg-[#0b1324] text-sm text-slate-900 dark:text-[#cbdfe2] px-3 py-2.5 rounded border border-slate-200 dark:border-[#3a494a] font-mono focus:outline-none focus:border-cyan-500 dark:focus:border-[#00dce5]"
                     />
                     <button
                       type="submit"
-                      className="px-4 bg-[#2d3547] text-white rounded border border-[#3a494a] hover:bg-[#3a494a] transition-all cursor-pointer flex items-center justify-center text-sm"
+                      className="px-4 bg-slate-700 dark:bg-[#2d3547] text-white rounded border border-slate-600 dark:border-[#3a494a] hover:bg-slate-800 dark:hover:bg-[#3a494a] transition-all cursor-pointer flex items-center justify-center text-sm"
                     >
                       Join
                     </button>
                   </div>
                 </form>
 
-                <div className="border-t border-[#3a494a]/30 my-4" />
+                <div className="border-t border-slate-200 dark:border-[#3a494a]/30 my-4" />
 
                 {/* 2FA Security Section */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-[#808e93]">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-[#808e93]">
                       TWO-FACTOR AUTH (2FA)
                     </label>
                     <span
                       className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
                         user?.isTwoFactorEnabled
-                          ? "bg-[#00dce5]/10 text-[#00dce5] border border-[#00dce5]/30"
-                          : "bg-red-500/10 text-red-400 border border-red-500/30"
+                          ? "bg-cyan-500/10 dark:bg-[#00dce5]/10 text-cyan-600 dark:text-[#00dce5] border border-cyan-500/30 dark:border-[#00dce5]/30"
+                          : "bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/30"
                       }`}
                     >
                       {user?.isTwoFactorEnabled ? "ENABLED" : "DISABLED"}
@@ -427,8 +432,8 @@ function Dashboard() {
                     disabled={isToggling2FA}
                     className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border text-xs font-bold transition-all cursor-pointer disabled:opacity-50 ${
                       user?.isTwoFactorEnabled
-                        ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white"
-                        : "border-[#00dce5]/40 bg-[#00dce5]/10 text-[#00dce5] hover:bg-[#00dce5] hover:text-[#003739]"
+                        ? "border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500 hover:text-white"
+                        : "border-cyan-500/40 dark:border-[#00dce5]/40 bg-cyan-500/10 dark:bg-[#00dce5]/10 text-cyan-600 dark:text-[#00dce5] hover:bg-[#00dce5] hover:text-[#003739]"
                     }`}
                   >
                     {user?.isTwoFactorEnabled ? (
@@ -451,23 +456,23 @@ function Dashboard() {
 
             {/* Recent Workspaces Card */}
             <section className="md:col-span-2">
-              <div className="bg-[#171f31]/60 backdrop-blur-md border border-[#3a494a]/50 p-6 rounded-xl min-h-[350px] flex flex-col">
+              <div className="bg-slate-50/80 dark:bg-[#171f31]/60 backdrop-blur-md border border-slate-200 dark:border-[#3a494a]/50 p-6 rounded-xl min-h-[350px] flex flex-col">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-[#01c8d2]">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-cyan-600 dark:text-[#01c8d2]">
                     Recent Workspaces
                   </h2>
-                  <span className="text-xs text-[#808e93] font-mono">
+                  <span className="text-xs text-slate-500 dark:text-[#808e93] font-mono">
                     {recentRooms.length} Active
                   </span>
                 </div>
 
                 <div className="flex-1 space-y-4">
                   {loading ? (
-                    <p className="text-sm font-mono text-[#808e93] text-center py-8">
+                    <p className="text-sm font-mono text-slate-500 dark:text-[#808e93] text-center py-8">
                       Loading workspaces...
                     </p>
                   ) : recentRooms.length === 0 ? (
-                    <p className="text-sm font-mono text-[#808e93] text-center py-8">
+                    <p className="text-sm font-mono text-slate-500 dark:text-[#808e93] text-center py-8">
                       No workspaces found. Create one to get started!
                     </p>
                   ) : (
@@ -482,17 +487,17 @@ function Dashboard() {
                             },
                           })
                         }
-                        className="flex items-center justify-between p-4 rounded-lg bg-[#0b1324]/50 border border-[#3a494a]/30 hover:border-[#00dce5]/50 hover:bg-[#0b1324] transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-4 rounded-lg bg-white/60 dark:bg-[#0b1324]/50 border border-slate-200 dark:border-[#3a494a]/30 hover:border-cyan-500/50 dark:hover:border-[#00dce5]/50 hover:bg-white dark:hover:bg-[#0b1324] transition-all cursor-pointer group"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-[#2d3547] flex items-center justify-center text-[#63f7ff]">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-[#2d3547] flex items-center justify-center text-cyan-600 dark:text-[#63f7ff]">
                             <Layout className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="text-sm font-semibold text-[#cbdfe2] group-hover:text-[#00dce5] transition-colors">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#cbdfe2] group-hover:text-cyan-600 dark:group-hover:text-[#00dce5] transition-colors">
                               {room.name}
                             </h3>
-                            <p className="text-xs text-[#808e93] font-mono">
+                            <p className="text-xs text-slate-500 dark:text-[#808e93] font-mono">
                               ID: #{room.roomId}
                             </p>
                           </div>
@@ -500,10 +505,10 @@ function Dashboard() {
 
                         <div className="text-right flex items-center gap-6">
                           <div className="hidden sm:block">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#2d3547] text-[#cbdfe2]">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-[#2d3547] text-slate-700 dark:text-[#cbdfe2]">
                               {room.language || "javascript"}
                             </span>
-                            <span className="flex items-center gap-1 text-[10px] text-[#808e93] mt-1.5 justify-end">
+                            <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-[#808e93] mt-1.5 justify-end">
                               <Calendar className="w-3 h-3" />{" "}
                               {new Date(room.updatedAt).toLocaleDateString()}
                             </span>
@@ -511,17 +516,15 @@ function Dashboard() {
                           {getOwnerId(room.owner) === user?._id && (
                             <button
                               onClick={(e) => handleDeleteRoom(e, room.roomId)}
-                              className="text-[#808e93] hover:text-red-400 p-1.5 rounded transition-all cursor-pointer hover:bg-[#2d3547]/30 z-30"
+                              className="text-slate-500 dark:text-[#808e93] hover:text-red-500 dark:hover:text-red-400 p-1.5 rounded transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-[#2d3547]/30 z-30"
                               title="Delete Workspace"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           )}
-                          <ArrowRight className="w-4 h-4 text-[#808e93] group-hover:text-[#00dce5] group-hover:translate-x-1 transition-all" />
+                          <ArrowRight className="w-4 h-4 text-slate-500 dark:text-[#808e93] group-hover:text-cyan-600 dark:group-hover:text-[#00dce5] group-hover:translate-x-1 transition-all" />
                         </div>
                       </div>
-
-                      
                     ))
                   )}
                 </div>

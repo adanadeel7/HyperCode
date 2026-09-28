@@ -1,10 +1,13 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Copy, Moon, FolderGit2, Play, Terminal as TermIcon, FileCode, Users, Plus, Trash2, Globe, FileText, Code } from "lucide-react";
+import { Copy, Moon, FolderGit2, Play, Terminal as TermIcon, FileCode, Users, Plus, Trash2, Globe, FileText, Code, Settings } from "lucide-react";
 import { gsap } from "gsap";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
-import { initSocket } from "../socket.js"; 
+import { initSocket } from "../socket.js";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/authContext.js";
+import EditorSettingsModal from "../components/EditorSettingsModal";
+
 
 const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 const backendUrl = import.meta.env.VITE_BACKEND_URL || (isLocalhost ? "http://localhost:8000" : "https://hypercode-18ib.onrender.com");
@@ -69,6 +72,55 @@ function Editor() {
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
     `[System]: Terminal session initialized for developer: ${passedState.userName || "Adan Adeel"}`
   ]);
+
+
+  const {user, setUser} = useAuth()
+  const [editorTheme, setEditorTheme] = useState(user?.editorSettings?.theme || "vs-dark")
+  const [fontSizes, setfontSize] = useState(user?.editorSettings?.fontSize || 13 )
+  const [wordWraps, setwordWrap] = useState(user?.editorSettings?.wordWrap || true)
+  const [minimaps, setMinimap] = useState(user?.editorSettings?.minimap || false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const persistEditorSettings = async (settings: { theme: string; fontSize: number; wordWrap: boolean; minimap: boolean }): Promise<boolean> => {
+    setIsSavingSettings(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/settings`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEditorTheme(data.editorSettings.theme);
+        setfontSize(data.editorSettings.fontSize);
+        setwordWrap(data.editorSettings.wordWrap);
+        setMinimap(data.editorSettings.minimap);
+        setUser((prev) => (prev ? { ...prev, editorSettings: data.editorSettings } : prev));
+        return true;
+      }
+      toast.error(data.message || "Failed to save editor settings");
+      return false;
+    } catch (err) {
+      console.error(err);
+      toast.error("Error connecting to server");
+      return false;
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = editorTheme === "vs-dark" ? "light" : "vs-dark";
+    persistEditorSettings({ theme: nextTheme, fontSize: fontSizes, wordWrap: wordWraps, minimap: minimaps });
+  };
+
+  const handleSaveSettings = async (settings: { theme: string; fontSize: number; wordWrap: boolean; minimap: boolean }) => {
+    const success = await persistEditorSettings(settings);
+    if (success) setShowSettingsModal(false);
+  };
+
 
   const getLanguageFromFilename = (filename: string): string => {
     const ext = filename.split('.').pop()?.toLowerCase();
@@ -405,19 +457,19 @@ function Editor() {
     <>
       <div ref={glowRef} className="pointer-events-none fixed w-96 h-96 rounded-full bg-[#63f7ff] opacity-5 blur-[100px] z-10" style={{ transform: "translate(-50%, -50%)", top: 0, left: 0 }} />
 
-      <div ref={containerRef} className="bg-[#0b1324] text-[#dae2fb] h-screen overflow-hidden flex flex-col font-sans antialiased z-0 relative"
+      <div ref={containerRef} className="bg-white text-slate-900 dark:bg-[#0b1324] dark:text-[#dae2fb] h-screen overflow-hidden flex flex-col font-sans antialiased z-0 relative"
         style={{
           backgroundSize: "40px 40px",
           backgroundImage: `linear-gradient(to right, rgba(0, 220, 229, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 220, 229, 0.02) 1px, transparent 1px)`,
         }}
       >
-        <header ref={headerRef} className="bg-[#0b1324]/90 backdrop-blur-md text-[#e9feff] border-b border-[#3a494a] flex justify-between items-center h-[32px] px-[24px] w-full shrink-0 z-50 relative">
+        <header ref={headerRef} className="bg-white/90 dark:bg-[#0b1324]/90 backdrop-blur-md text-slate-900 dark:text-[#e9feff] border-b border-slate-200 dark:border-[#3a494a] flex justify-between items-center h-[32px] px-[24px] w-full shrink-0 z-50 relative">
           <div className="flex items-center">
-            <span onClick={() => navigate("/room")} className="text-[16px] font-bold tracking-tight cursor-pointer hover:text-[#00dce5] transition-colors">HyperCode</span>
-            <div className="h-4 w-px bg-[#3a494a] mx-[16px]"></div>
-            <div className="flex items-center gap-[8px] text-[#b9caca] text-[11px] font-mono tracking-wider">
+            <span onClick={() => navigate("/room")} className="text-[16px] font-bold tracking-tight cursor-pointer hover:text-cyan-600 dark:hover:text-[#00dce5] transition-colors">HyperCode</span>
+            <div className="h-4 w-px bg-slate-200 dark:bg-[#3a494a] mx-[16px]"></div>
+            <div className="flex items-center gap-[8px] text-slate-500 dark:text-[#b9caca] text-[11px] font-mono tracking-wider">
               <span>Room ID: #{roomId}</span>
-              <button onClick={copyRoomId} className={`hover:text-[#e9feff] transition-colors hover:bg-[#2d3547] rounded-full p-1 opacity-80 cursor-pointer ${isCopied ? "text-emerald-400" : ""}`}>
+              <button onClick={copyRoomId} className={`hover:text-slate-900 dark:hover:text-[#e9feff] transition-colors hover:bg-slate-100 dark:hover:bg-[#2d3547] rounded-full p-1 opacity-80 cursor-pointer ${isCopied ? "text-emerald-400" : ""}`}>
                 <Copy className="w-[12px] h-[12px]" />
               </button>
             </div>
@@ -426,7 +478,7 @@ function Editor() {
           <div className="flex items-center gap-[8px]">
             <div className="flex -space-x-2 mr-[24px]">
               {clients.map((client, idx) => (
-                <div key={client.socketId || idx} className="w-5 h-5 rounded-full border border-[#171f31] flex items-center justify-center text-[10px] font-bold uppercase tracking-tighter shadow-md select-none cursor-help"
+                <div key={client.socketId || idx} className="w-5 h-5 rounded-full border border-white dark:border-[#171f31] flex items-center justify-center text-[10px] font-bold uppercase tracking-tighter shadow-md select-none cursor-help"
                   style={{ backgroundColor: idx % 2 === 0 ? "#63f7ff" : "#fbb3c1", color: "#0b1324" }}
                   title={`${client.userName} ${client.userName === currentUserName ? "(You)" : ""}`}
                 >
@@ -434,36 +486,53 @@ function Editor() {
                 </div>
               ))}
             </div>
-            <button className="hover:bg-[#2d3547] transition-colors text-[#b9caca] rounded-full p-1 opacity-80 cursor-pointer">
+            <button onClick={handleToggleTheme} className="hover:bg-slate-100 dark:hover:bg-[#2d3547] transition-colors text-slate-500 dark:text-[#b9caca] rounded-full p-1 opacity-80 cursor-pointer">
               <Moon className="w-[14px] h-[14px]" />
+            </button>
+            <button onClick={() => setShowSettingsModal(true)} className="hover:bg-slate-100 dark:hover:bg-[#2d3547] transition-colors text-slate-500 dark:text-[#b9caca] rounded-full p-1 opacity-80 cursor-pointer">
+              <Settings className="w-[14px] h-[14px]" />
             </button>
           </div>
         </header>
 
+        {showSettingsModal && (
+          <EditorSettingsModal
+            initialSettings={{
+              theme: editorTheme,
+              fontSize: fontSizes,
+              wordWrap: wordWraps,
+              minimap: minimaps,
+            }}
+            isSubmitting={isSavingSettings}
+            onSave={handleSaveSettings}
+            onCancel={() => setShowSettingsModal(false)}
+          />
+        )}
+
         <div className="flex flex-1 overflow-hidden relative z-20">
-          <nav ref={sidebarRef} className="bg-[#171f31]/40 backdrop-blur-md w-[240px] flex flex-col border-r border-[#3a494a] shrink-0 hidden md:flex">
-            <div className="p-[24px] border-b border-[#3a494a]">
+          <nav ref={sidebarRef} className="bg-slate-50/60 dark:bg-[#171f31]/40 backdrop-blur-md w-[240px] flex flex-col border-r border-slate-200 dark:border-[#3a494a] shrink-0 hidden md:flex">
+            <div className="p-[24px] border-b border-slate-200 dark:border-[#3a494a]">
               <div className="flex items-center gap-[16px]">
-                <div className="w-8 h-8 rounded-full bg-[#2d3547] border border-[#3a494a] flex items-center justify-center text-[#63f7ff]">
+                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2d3547] border border-slate-200 dark:border-[#3a494a] flex items-center justify-center text-cyan-600 dark:text-[#63f7ff]">
                   <FolderGit2 className="w-[16px] h-[16px]" />
                 </div>
                 <div>
                   <h2 className="text-[11px] font-bold tracking-wider uppercase">Project Alpha</h2>
-                  <span className="text-[11px] text-[#b9caca] block mt-[2px]">main branch</span>
+                  <span className="text-[11px] text-slate-500 dark:text-[#b9caca] block mt-[2px]">main branch</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-b border-[#3a494a]/40 bg-[#0f172a]/20">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[#808e93] mb-2.5 px-2">
-                <Users className="w-3 h-3 text-[#00dce5]" />
+            <div className="p-4 border-b border-slate-200/60 dark:border-[#3a494a]/40 bg-slate-50 dark:bg-[#0f172a]/20">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-slate-400 dark:text-[#808e93] mb-2.5 px-2">
+                <Users className="w-3 h-3 text-cyan-600 dark:text-[#00dce5]" />
                 <span>Active Peers ({clients.length})</span>
               </div>
               <div className="space-y-1.5 max-h-32 overflow-y-auto px-2">
                 {clients.map((user) => (
                   <div key={user.socketId} className="flex items-center gap-2 text-[12px]">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span className={user.userName === currentUserName ? "text-[#63f7ff] font-medium" : "text-[#b9caca]"}>
+                    <span className={user.userName === currentUserName ? "text-cyan-600 dark:text-[#63f7ff] font-medium" : "text-slate-500 dark:text-[#b9caca]"}>
                       {user.userName} {user.userName === currentUserName && "(you)"}
                     </span>
                   </div>
@@ -473,10 +542,10 @@ function Editor() {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               <div className="flex justify-between items-center px-2 mb-2">
-                <span className="text-[10px] uppercase tracking-widest text-[#808e93] block">Files</span>
-                <button 
-                  onClick={() => setShowNewFileInput(!showNewFileInput)} 
-                  className="text-[#63f7ff] hover:text-[#e9feff] transition-colors cursor-pointer"
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-[#808e93] block">Files</span>
+                <button
+                  onClick={() => setShowNewFileInput(!showNewFileInput)}
+                  className="text-cyan-600 dark:text-[#63f7ff] hover:text-slate-900 dark:hover:text-[#e9feff] transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -490,20 +559,20 @@ function Editor() {
                     placeholder="e.g. index.html"
                     value={newFileName}
                     onChange={(e) => setNewFileName(e.target.value)}
-                    className="w-full bg-[#0b1324] text-[11px] text-[#e9feff] px-2 py-1 rounded border border-[#3a494a] focus:outline-none focus:border-[#63f7ff] font-mono"
+                    className="w-full bg-white dark:bg-[#0b1324] text-[11px] text-slate-900 dark:text-[#e9feff] px-2 py-1 rounded border border-slate-200 dark:border-[#3a494a] focus:outline-none focus:border-cyan-500 dark:focus:border-[#63f7ff] font-mono"
                   />
                 </form>
               )}
 
               <div className="space-y-1">
                 {files.map((file) => (
-                  <div 
-                    key={file.name} 
+                  <div
+                    key={file.name}
                     onClick={() => handleSelectFile(file.name)}
                     className={`group flex items-center justify-between px-2 py-1.5 rounded text-[12px] font-mono cursor-pointer transition-all border-l-2 ${
-                      file.name === activeFile 
-                        ? "bg-[#2d3547]/50 text-[#e9feff] border-[#63f7ff]" 
-                        : "text-[#b9caca] border-transparent hover:bg-[#2d3547]/20"
+                      file.name === activeFile
+                        ? "bg-slate-100 dark:bg-[#2d3547]/50 text-slate-900 dark:text-[#e9feff] border-cyan-500 dark:border-[#63f7ff]"
+                        : "text-slate-500 dark:text-[#b9caca] border-transparent hover:bg-slate-100 dark:hover:bg-[#2d3547]/20"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -523,9 +592,9 @@ function Editor() {
             </div>
           </nav>
 
-          <main ref={mainWorkspaceRef} className="flex-1 flex flex-col overflow-hidden bg-[#0e1726]/40 backdrop-blur-xs">
-            <div className="h-9 border-b border-[#3a494a] bg-[#0b1324]/60 flex items-center justify-between px-4">
-              <div className="flex items-center gap-2 text-[12px] font-mono text-[#b9caca]">
+          <main ref={mainWorkspaceRef} className="flex-1 flex flex-col overflow-hidden bg-slate-50/60 dark:bg-[#0e1726]/40 backdrop-blur-xs">
+            <div className="h-9 border-b border-slate-200 dark:border-[#3a494a] bg-white/60 dark:bg-[#0b1324]/60 flex items-center justify-between px-4">
+              <div className="flex items-center gap-2 text-[12px] font-mono text-slate-500 dark:text-[#b9caca]">
                 <span className="text-emerald-400">●</span>
                 <span>{activeFile}</span>
               </div>
@@ -540,14 +609,14 @@ function Editor() {
               <div className={`flex-1 h-full ${isWebFileActive ? "w-1/2" : "w-full"}`}>
                 <MonacoEditor
                   height="100%"
-                  theme="vs-dark"
+                  theme={editorTheme}
                   language={activeLang}
                   value={code}
                   onChange={handleCodeChange}
                   options={{
-                    minimap: { enabled: false },
-                    fontSize: 13,
-                    wordWrap: "on",
+                    minimap: { enabled: minimaps },
+                    fontSize: fontSizes,
+                    wordWrap: wordWraps ? "on" : "off",
                     suggestOnTriggerCharacters: true,
                     lineNumbersMinChars: 3,
                     padding: { top: 16 }
@@ -556,7 +625,7 @@ function Editor() {
               </div>
 
               {isWebFileActive && (
-                <div className="w-1/2 h-full border-l border-[#3a494a] bg-white flex flex-col">
+                <div className="w-1/2 h-full border-l border-slate-200 dark:border-[#3a494a] bg-white flex flex-col">
                   <div className="h-7 bg-[#f7fafc] border-b border-[#cbd5e0] px-4 flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-[#718096] tracking-wider font-mono">Live Web Preview</span>
                   </div>
@@ -570,23 +639,23 @@ function Editor() {
               )}
             </div>
 
-            <div className="h-44 border-t border-[#3a494a] bg-[#0b1324]/90 flex flex-col overflow-hidden">
-              <div className="h-7 border-b border-[#3a494a]/50 bg-[#070d18] flex items-center px-4 gap-2 text-[11px] font-mono tracking-wider uppercase text-[#808e93]">
-                <TermIcon className="w-3 h-3 text-[#00dce5]" />
+            <div className="h-44 border-t border-slate-200 dark:border-[#3a494a] bg-white/90 dark:bg-[#0b1324]/90 flex flex-col overflow-hidden">
+              <div className="h-7 border-b border-slate-200/50 dark:border-[#3a494a]/50 bg-slate-100 dark:bg-[#070d18] flex items-center px-4 gap-2 text-[11px] font-mono tracking-wider uppercase text-slate-400 dark:text-[#808e93]">
+                <TermIcon className="w-3 h-3 text-cyan-600 dark:text-[#00dce5]" />
                 <span>Execution Console</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 font-mono text-[12px] space-y-1 text-[#a0aec0]">
+              <div className="flex-1 overflow-y-auto p-4 font-mono text-[12px] space-y-1 text-slate-600 dark:text-[#a0aec0]">
                 {terminalLogs.map((log, i) => (
                   <div key={i} className={`${
-                    log.includes('[System]') 
-                      ? 'text-cyan-400/80' 
-                      : log.includes('[Running]') 
-                        ? 'text-amber-400/80' 
+                    log.includes('[System]')
+                      ? 'text-cyan-600 dark:text-cyan-400/80'
+                      : log.includes('[Running]')
+                        ? 'text-amber-600 dark:text-amber-400/80'
                         : log.includes('[Iframe Preview Error]')
-                          ? 'text-red-400/90'
+                          ? 'text-red-600 dark:text-red-400/90'
                           : log.includes('[Iframe Preview Console]')
-                            ? 'text-purple-400/90'
-                            : 'text-slate-300'
+                            ? 'text-purple-600 dark:text-purple-400/90'
+                            : 'text-slate-600 dark:text-slate-300'
                   }`}>{log}</div>
                 ))}
               </div>
