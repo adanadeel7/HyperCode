@@ -4,12 +4,12 @@ import { UserDocument, User } from "../models/Users.models.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
-import { error, log } from "node:console";
 import crypto from "crypto";
 import {
   sendVerificationEmail,
   sendTwoFactorOTPEmail,
 } from "../utils/sendEmail.js";
+import { registerSchema,loginSchema,forgotPasswordSchema,resetPasswordSechma } from "../schema/auth.schema.js";
 
 dotenv.config();
 
