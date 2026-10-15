@@ -13,13 +13,21 @@ app.set("trust proxy", 1);
 
 app.use(cors({
     origin: (origin, callback) => {
-        const allowedOrigins = [process.env.FRONTEND_URL];
+        const allowedOrigins = [
+            process.env.FRONTEND_URL,
+            "https://hypercodes.adancodes.dev",
+            "https://hypercodes.adancodes.dev/",
+            "https://hyper-code.vercel.app"
+        ];
 
         if (!origin) {
             return callback(null, true);
         }
 
-        const isAllowed = allowedOrigins.includes(origin)
+        const normalizedOrigin = origin.replace(/\/$/, "");
+        const isAllowed = allowedOrigins
+            .filter(Boolean)
+            .some((allowed) => (allowed as string).replace(/\/$/, "") === normalizedOrigin);
 
         if (isAllowed) {
             callback(null, true);
