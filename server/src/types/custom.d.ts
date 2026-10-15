@@ -1,3 +1,4 @@
 declare module 'passport';
 declare module 'passport-google-oauth20';
 declare module 'jsonwebtoken';
+declare module 'nodemailer';
