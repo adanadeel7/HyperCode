@@ -10,4 +10,24 @@ const executeLimiter = rateLimit({
   },
 });
 
-export { executeLimiter };
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: "Too many attempts from this IP. Please try again after 15 minutes.",
+  },
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: "Too many security code attempts. Please try again later.",
+  },
+});
+
+export { executeLimiter, authLimiter, otpLimiter };

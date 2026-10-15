@@ -59,7 +59,7 @@ async function deleteRoom(req : Request, res:Response) {
         }
 
         // Authorization check: only owner can delete the workspace
-        if (room.owner && room.owner.toString() !== req.user?._id?.toString()) {
+        if (!room.owner || room.owner.toString() !== req.user?._id?.toString()) {
             return res.status(403).json({ success: false, message: "Not authorized to delete this workspace" });
         }
 

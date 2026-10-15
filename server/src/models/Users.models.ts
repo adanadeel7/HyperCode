@@ -15,9 +15,10 @@ export interface UserDocument extends Document{
     emailVerificationExpires?: Date  | undefined ; 
 
     //2FA (Email OTP)
-      isTwoFactorEnabled: boolean;
+    isTwoFactorEnabled: boolean;
     twoFactorOtp?: string | undefined;
-        twoFactorOtpExpires?: Date | undefined;
+    twoFactorOtpExpires?: Date | undefined;
+    twoFactorAttempts?: number | undefined;
 
     //Editor Settings
     editorSettings: {
@@ -78,6 +79,11 @@ const userSchema = new mongoose.Schema<UserDocument>( {
     
     twoFactorOtpExpires : { 
         type: Date,
+    },
+
+    twoFactorAttempts : {
+        type: Number,
+        default: 0
     },
 
     editorSettings: {

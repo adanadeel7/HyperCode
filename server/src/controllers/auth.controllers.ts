@@ -306,9 +306,11 @@ async function loginUser(req: Request, res: Response) {
     }
 
     if (user.isTwoFactorEnabled) {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.twoFactorOtp = otp;
+      const otp = crypto.randomInt(100000, 1000000).toString();
+      const salt = await bcrypt.genSalt(10);
+      user.twoFactorOtp = await bcrypt.hash(otp, salt);
       user.twoFactorOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      user.twoFactorAttempts = 0;
       await user.save();
 
       try {
@@ -384,17 +386,39 @@ async function verifyTwoFactorOTP(req: Request, res: Response) {
 
     if (
       !user.twoFactorOtp ||
-      user.twoFactorOtp !== String(otp).trim() ||
       !user.twoFactorOtpExpires ||
       user.twoFactorOtpExpires < new Date()
     ) {
       return res
         .status(400)
-        .json({ message: "Invalid or expired security code" });
+        .json({ message: "Security code has expired. Please log in again." });
+    }
+
+    if ((user.twoFactorAttempts || 0) >= 5) {
+      user.twoFactorOtp = undefined;
+      user.twoFactorOtpExpires = undefined;
+      user.twoFactorAttempts = 0;
+      await user.save();
+      return res.status(429).json({
+        message: "Too many failed attempts. Security code invalidated. Please log in again.",
+      });
+    }
+
+    const isOtpValid = await bcrypt.compare(String(otp).trim(), user.twoFactorOtp);
+    if (!isOtpValid) {
+      user.twoFactorAttempts = (user.twoFactorAttempts || 0) + 1;
+      await user.save();
+      const remainingAttempts = Math.max(0, 5 - user.twoFactorAttempts);
+      return res.status(400).json({
+        message: remainingAttempts > 0
+          ? `Invalid security code. ${remainingAttempts} attempts remaining.`
+          : "Invalid security code. Maximum attempts exceeded. Please log in again.",
+      });
     }
 
     user.twoFactorOtp = undefined;
     user.twoFactorOtpExpires = undefined;
+    user.twoFactorAttempts = 0;
     await user.save();
 
     const token = jwt.sign({ id: user._id }, jwt_secret, { expiresIn: "7d" });
@@ -493,7 +517,18 @@ async function getCurrentUser(req : Request, res : Response) {
 
 
 function googleAuthCallback(req: Request, res: Response) {
-  let frontendUrl = process.env.FRONTEND_URL;
+  const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
+  const ALLOWED_ORIGINS = [
+    "https://hypercodes.adancodes.dev",
+    "https://hyper-code.vercel.app",
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+  ].filter(Boolean).map((url) => (url as string).replace(/\/$/, ""));
+
+  let frontendUrl = (
+    process.env.FRONTEND_URL ||
+    (isProd ? "https://hypercodes.adancodes.dev" : "http://localhost:5173")
+  ).replace(/\/$/, "");
 
   if (req.query.state) {
     try {
@@ -501,7 +536,10 @@ function googleAuthCallback(req: Request, res: Response) {
         Buffer.from(String(req.query.state), "base64").toString("utf8"),
       );
       if (parsed.origin) {
-        frontendUrl = String(parsed.origin).replace(/\/$/, "");
+        const normalizedOrigin = String(parsed.origin).replace(/\/$/, "");
+        if (ALLOWED_ORIGINS.includes(normalizedOrigin)) {
+          frontendUrl = normalizedOrigin;
+        }
       }
     } catch (e) {
       console.warn("Failed to parse OAuth state parameter:", e);
