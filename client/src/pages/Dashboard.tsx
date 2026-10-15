@@ -67,7 +67,14 @@ function Dashboard() {
   const [recentRooms, setRecentRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-    
+  const getAuthHeaders = (extra: Record<string, string> = {}) => {
+    const token = localStorage.getItem("token");
+    const headers: Record<string, string> = { ...extra };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  };
 
   useEffect(() => {
     if (!glowRef.current) return;
@@ -94,6 +101,7 @@ function Dashboard() {
       try {
         const response = await fetch(`${backendUrl}/api/rooms`, {
           credentials: "include",
+          headers: getAuthHeaders(),
         });
 
         if (response.status === 401) {
@@ -132,9 +140,9 @@ function Dashboard() {
       const response = await fetch(`${backendUrl}/api/rooms`, {
         method: "POST",
         credentials: "include",
-        headers: {
+        headers: getAuthHeaders({
           "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify({ roomId: generatedId, name: roomName }),
       });
       const data = (await response.json()) as ApiResponse;
@@ -176,6 +184,7 @@ function Dashboard() {
         const response = await fetch(`${backendUrl}/api/rooms/${roomId}`, {
           method: "DELETE",
           credentials: "include",
+          headers: getAuthHeaders(),
         });
         const data = (await response.json()) as ApiResponse;
 
@@ -225,9 +234,9 @@ function Dashboard() {
       const res = await fetch (`${backendUrl}/api/auth/2fa/toggle`, {
         method : "POST",
         credentials : "include",
-        headers : {
+        headers : getAuthHeaders({
           "Content-Type" : "application/json",
-        },
+        }),
         body : JSON.stringify({password}),
       });
 
@@ -264,9 +273,9 @@ function Dashboard() {
       const res = await fetch(`${backendUrl}/api/auth/send-verification`, {
         method: "POST",
         credentials: "include",
-        headers: {
+        headers: getAuthHeaders({
           "Content-Type": "application/json",
-        },
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {

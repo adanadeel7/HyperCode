@@ -131,6 +131,10 @@ function Login() {
         return;
       }
 
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
@@ -174,6 +178,10 @@ function Login() {
       if (!response.ok) {
         toast.error(data.message || "Invalid or expired security code");
         return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
       }
 
       if (data.user) {

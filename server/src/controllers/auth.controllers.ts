@@ -10,6 +10,7 @@ import {
   sendTwoFactorOTPEmail,
 } from "../utils/sendEmail.js";
 import { registerSchema,loginSchema,forgotPasswordSchema,resetPasswordSechma } from "../schema/auth.schema.js";
+import { hashedPassword } from "../utils/hast.js";
 
 dotenv.config();
 
@@ -41,10 +42,19 @@ if (!jwt_secret) {
 
 async function registerUser(req: Request, res: Response) {
   try {
-    const { name, email, password } = req.body;
+    const parseResult = registerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const errorMessage = parseResult.error.issues[0]?.message || "Invalid registration input";
+      return res.status(400).json({
+        message: errorMessage,
+        errors: parseResult.error.flatten().fieldErrors,
+      });
+    }
 
+    const { name, email, password } = parseResult.data;
+    const normalizedEmail = email.toLowerCase().trim();
     const isUserAlreadyExist = await User.findOne({
-      email,
+      email: normalizedEmail,
     });
 
     if (isUserAlreadyExist) {
@@ -53,15 +63,15 @@ async function registerUser(req: Request, res: Response) {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await hashedPassword(password);
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
+      name: name.trim(),
+      email: normalizedEmail,
+      password: passwordHash,
       isEmailVerified: false,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: emailVerificationExpires,
@@ -111,12 +121,12 @@ async function registerUser(req: Request, res: Response) {
 
 async function verifyEmail(req: Request, res: Response) {
   try {
-    const { token } = req.query;
+    const token = req.query.token as string | undefined;
 
     if (!token || typeof token !== "string") {
       return res
         .status(400)
-        .json({ message: " Invalid or missing verification token" });
+        .json({ message: "Invalid or missing verification token" });
     }
 
     const user = await User.findOne({
@@ -151,11 +161,12 @@ async function resendVerificationEmail(req: Request, res: Response) {
 
     if (!email) {
       return res.status(400).json({
-        message: " Email is Required",
+        message: "Email is Required",
       });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res
@@ -203,7 +214,7 @@ async function sendMyVerificationEmail(req: Request, res: Response) {
     const userId = req.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ messgae: "Not authorized" });
+      return res.status(401).json({ message: "Not authorized" });
     }
 
     const user = await User.findById(userId);
@@ -223,11 +234,13 @@ async function sendMyVerificationEmail(req: Request, res: Response) {
     user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL;
+    const isProduction =
+      process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
+    const frontendUrl = (
+      process.env.FRONTEND_URL ||
+      (isProduction ? "https://hyper-code.vercel.app" : "http://localhost:5173")
+    ).replace(/\/$/, "");
 
-    if (!frontendUrl) {
-      throw Error("Frontend URL not defined in envoirmental variables");
-    }
     await sendVerificationEmail(
       user.email,
       user.name,
@@ -247,10 +260,20 @@ async function sendMyVerificationEmail(req: Request, res: Response) {
 
 async function loginUser(req: Request, res: Response) {
   try {
-    const { email, password } = req.body;
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const errorMessage = parseResult.error.issues[0]?.message || "Invalid login input";
+      return res.status(400).json({
+        message: errorMessage,
+        errors: parseResult.error.flatten().fieldErrors,
+      });
+    }
+
+    const { email, password } = parseResult.data;
+    const normalizedEmail = email.toLowerCase().trim();
 
     const user = await User.findOne({
-      email,
+      email: normalizedEmail,
     });
 
     if (!user) {
@@ -261,7 +284,9 @@ async function loginUser(req: Request, res: Response) {
     const Userpassword = user.password;
 
     if (!Userpassword) {
-      throw Error("Password not found");
+      return res.status(400).json({
+        message: "This account was registered using Google. Please sign in with Google.",
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(password, Userpassword);
@@ -336,7 +361,7 @@ async function loginUser(req: Request, res: Response) {
 async function logoutUser(req: Request, res: Response) {
   res.clearCookie("token");
   res.status(200).json({
-    message: " User Successfully Logged out",
+    message: "User Successfully Logged out",
   });
 }
 
@@ -350,7 +375,8 @@ async function verifyTwoFactorOTP(req: Request, res: Response) {
       });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -414,16 +440,15 @@ async function toggleTwoFactor(req: Request, res: Response) {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
-  
 
-    const UserPassword = user.password
+    const UserPassword = user.password;
 
-    if (!UserPassword ) {
-      throw Error("User Password no correct");
+    if (!UserPassword) {
+      return res.status(400).json({
+        message: "Password confirmation is not available for Google accounts.",
+      });
     }
 
-    
     const isMatch = await bcrypt.compare(password, UserPassword);
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });

@@ -85,10 +85,16 @@ function Editor() {
   const persistEditorSettings = async (settings: { theme: string; fontSize: number; wordWrap: boolean; minimap: boolean }): Promise<boolean> => {
     setIsSavingSettings(true);
     try {
+      const token = localStorage.getItem("token");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${backendUrl}/api/auth/settings`, {
         method: "PATCH",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(settings),
       });
       const data = await res.json();
@@ -381,12 +387,18 @@ function Editor() {
     setTerminalLogs((prev) => [...prev, `[Running]: Executing compiler engine for ${activeFile}...`]);
     
     try {
+      const token = localStorage.getItem("token");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${backendUrl}/api/execute`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ code, filename: activeFile }),
       });
 

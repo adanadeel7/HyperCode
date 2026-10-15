@@ -17,9 +17,6 @@ async function getRooms(req : Request ,res : Response) {
 
         res.json({ success: true, rooms });
     } catch (error) {
-        if (!error) {
-            throw Error('Problem in get')
-        }
         const message = error instanceof Error ? error.message : String(error);
         res.status(500).json({ success: false, message });
     }
